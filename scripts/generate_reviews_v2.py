@@ -314,16 +314,16 @@ def create_excel(reviews, output_path):
     for col_idx, header in enumerate(headers, 1):
         ws.cell(row=1, column=col_idx, value=header)
     
-    # 2행: 설명 작성 (리뷰에이드 양식)
+    # 2행: 설명 작성 (리뷰에이드 양식 - example.xlsx 정확히 일치)
     descriptions = [
-        "",  # A열 product_no 설명 비움
-        "",  # B열
-        "",  # C열
-        "YYYY-MM-DD hh:mm:ss",  # D열 작성일 형식
-        "",  # E열
-        "1~5",  # F열 별점 범위
-        "미입력 시 내용을 제목으로 사용합니다.(250자)",  # G열 제목 설명
-        "",  # H열
+        "상품의 고유번호*\n리뷰에이드 어드민의 상품관리 탭에서 \n상품의 고유번호를 빠르게 확인할 수 있습니다. \n*product_no나 product_code 들 중\n하나만 입력해 주세요.",  # A열
+        "상품코드*\n리뷰에이드 어드민의 상품관리 탭에서 \n상품코드를 빠르게 확인할 수 있습니다. \n*product_no나 product_code 들 중\n하나만 입력해 주세요.",  # B열
+        "상품 옵션\n미입력시 공란으로 표시됩니다.",  # C열
+        "리뷰 작성일*\nYYYY-MM-DD hh:mm:ss\n시간 미 입력 시 00:00:00으로 입력됩니다.",  # D열
+        "리뷰 작성자 이름*",  # E열
+        "리뷰 별점 \n1~5점의 만족도\n미 입력 시 별점 5점으로 입력됩니다.",  # F열
+        "미 입력 시 리뷰 내용이 입력됩니다.\n제목 글자 수는 최대 250자로 제한됩니다. \n초과된 글자는 잘려서 보입니다.",  # G열
+        "리뷰 내용*",  # H열
         "",  # I열
         "",  # J열
         "",  # K열
