@@ -101,8 +101,8 @@ def generate_reviews():
         
         # 채널별 스크립트 선택
         script_map = {
-            'cafe24': os.path.join(BASE_DIR, 'scripts/generate_reviews_with_gpt.py'),
-            'juiceon': os.path.join(BASE_DIR, 'scripts/generate_reviews_with_gpt.py'),
+            'cafe24': os.path.join(BASE_DIR, 'scripts/generate_reviews_v2.py'),
+            'juiceon': os.path.join(BASE_DIR, 'scripts/generate_reviews_v2.py'),
             'kukdae': os.path.join(BASE_DIR, 'scripts/generate_reviews_kukdae.py')
         }
         

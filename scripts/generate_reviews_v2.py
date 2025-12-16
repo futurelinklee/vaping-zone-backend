@@ -131,6 +131,10 @@ def generate_reviews(products, review_count):
     """
     reviews = []
     
+    # 중복 방지를 위한 세트
+    used_reviews = set()
+    used_names = set()
+    
     # 각 제품에 리뷰를 랜덤 분산
     for i in range(review_count):
         # 랜덤으로 제품 선택
@@ -139,9 +143,35 @@ def generate_reviews(products, review_count):
         # 종류에서 카테고리 감지
         category = detect_category(product.get("type", ""))
         
-        # 카테고리에 맞는 리뷰 템플릿 선택
+        # 카테고리에 맞는 리뷰 템플릿 선택 (중복 방지)
         template_list = REVIEW_TEMPLATES.get(category, REVIEW_TEMPLATES["액상"])
-        review_content = random.choice(template_list)
+        review_content = None
+        for attempt in range(50):
+            temp_review = random.choice(template_list)
+            if temp_review not in used_reviews:
+                review_content = temp_review
+                used_reviews.add(review_content)
+                break
+        
+        # 중복을 피할 수 없으면 약간 변형
+        if review_content is None:
+            review_content = random.choice(template_list)
+            suffix = random.choice(['', ' ', '!', '~'])
+            review_content = review_content + suffix
+            used_reviews.add(review_content)
+        
+        # 작성자 이름 선택 (중복 방지)
+        author_name = None
+        for attempt in range(50):
+            temp_name = random.choice(REVIEWER_NAMES)
+            if temp_name not in used_names:
+                author_name = temp_name
+                used_names.add(author_name)
+                break
+        
+        # 중복을 피할 수 없으면 그냥 사용
+        if author_name is None:
+            author_name = random.choice(REVIEWER_NAMES)
         
         # 리뷰 데이터 생성
         review = {
@@ -149,7 +179,7 @@ def generate_reviews(products, review_count):
             "product_code": "",  # 비워둠
             "option": "",  # 상품 옵션 비워둠
             "date": generate_random_datetime(),
-            "author": random.choice(REVIEWER_NAMES),
+            "author": author_name,
             "rating": 5,  # 항상 5점
             "title": "",  # 미입력 시 내용이 제목으로
             "content": review_content,
