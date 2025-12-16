@@ -24,13 +24,30 @@ try:
 except Exception:
     GPT_ENABLED = False
 
-# 3글자 한국 이름 풀 (폴백용)
-REVIEWER_NAMES = [
-    '김민준', '이서윤', '박지호', '최예은', '정도윤', '강서연', '조민서', '윤지우', '장서준', '임하은',
-    '한지민', '오수아', '서예준', '권지아', '황지율', '송하은', '안수현', '홍지후', '전예린', '조지훈',
-    '구민재', '신서아', '문지환', '배수빈', '류지안', '노하린', '곽민우', '성지은', '변준혁', '하채원',
-    '옥서현', '석민혁', '탁지수', '도예나', '복진우', '남윤서', '공지훈', '방수민', '엄하윤', '양서진'
+# 작성자 이름 생성용 성/이름 풀
+LAST_NAMES = [
+    "김", "이", "박", "최", "정", "강", "조", "윤", "장", "임",
+    "한", "오", "서", "신", "권", "황", "안", "송", "전", "홍",
+    "유", "배", "백", "허", "남", "심", "노", "하", "곽", "성",
+    "차", "주", "우", "구", "신", "임", "나", "전", "민", "지"
 ]
+
+FIRST_NAMES = [
+    "민준", "서준", "예준", "도윤", "시우", "주원", "하준", "지호", "지후", "준서",
+    "준우", "현우", "도현", "건우", "우진", "선우", "서진", "민재", "현준", "연우",
+    "유준", "정우", "승우", "승현", "시윤", "승민", "지환", "승준", "유진", "지훈",
+    "서연", "서윤", "지우", "서현", "민서", "하은", "하윤", "윤서", "지유", "채원",
+    "지안", "수아", "소율", "예은", "다은", "예린", "수빈", "소윤", "지민", "채은",
+    "서아", "예나", "채윤", "은서", "가은", "수연", "예서", "다인", "유나", "하린",
+    "소연", "민지", "지영", "수진", "영희", "영숙", "정아", "미영", "현정", "은지",
+    "철수", "영수", "민수", "동현", "상훈", "재훈", "태양", "성호", "진우", "상우"
+]
+
+def generate_korean_name():
+    """한글 이름 3글자 자동 생성 (성 1글자 + 이름 2글자)"""
+    last_name = random.choice(LAST_NAMES)
+    first_name = random.choice(FIRST_NAMES)
+    return f"{last_name}{first_name}"
 
 # 템플릿 리뷰 (50자 이내, 긍정적, 자연스러운 표현 - 매우 다양하게)
 REVIEW_TEMPLATES = {
@@ -424,13 +441,10 @@ def create_kukdae_excel(products, review_count, template_path, output_path):
             review_content = review_content + suffix
             used_reviews.add(review_content)
         
-        # 이름 생성 (중복 방지)
+        # 이름 생성 (중복 방지) - 항상 자동 생성 함수 사용
         writer_name = None
         for attempt in range(50):
-            if GPT_ENABLED:
-                temp_name = generate_korean_name_with_gpt()
-            else:
-                temp_name = random.choice(REVIEWER_NAMES)
+            temp_name = generate_korean_name()  # 자동 생성 함수 사용
             
             if temp_name not in used_names:
                 writer_name = temp_name
@@ -439,10 +453,7 @@ def create_kukdae_excel(products, review_count, template_path, output_path):
         
         # 중복을 피할 수 없으면 그냥 사용
         if writer_name is None:
-            if GPT_ENABLED:
-                writer_name = generate_korean_name_with_gpt()
-            else:
-                writer_name = random.choice(REVIEWER_NAMES)
+            writer_name = generate_korean_name()  # 자동 생성 함수 사용
         
         # 날짜 생성
         writer_at = generate_random_datetime_3days_ago()

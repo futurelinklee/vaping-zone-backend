@@ -96,15 +96,30 @@ REVIEW_TEMPLATES = {
     ]
 }
 
-# 작성자 이름 풀
-REVIEWER_NAMES = [
-    "김**", "이**", "박**", "최**", "정**",
-    "강**", "조**", "윤**", "장**", "임**",
-    "한**", "오**", "서**", "신**", "권**",
-    "황**", "안**", "송**", "전**", "홍**",
-    "구매자***", "만족한고객**", "재구매의향**", "vape***",
-    "happy***", "user***", "good***", "nice***"
+# 작성자 이름 생성용 성/이름 풀
+LAST_NAMES = [
+    "김", "이", "박", "최", "정", "강", "조", "윤", "장", "임",
+    "한", "오", "서", "신", "권", "황", "안", "송", "전", "홍",
+    "유", "배", "백", "허", "남", "심", "노", "하", "곽", "성",
+    "차", "주", "우", "구", "신", "임", "나", "전", "민", "지"
 ]
+
+FIRST_NAMES = [
+    "민준", "서준", "예준", "도윤", "시우", "주원", "하준", "지호", "지후", "준서",
+    "준우", "현우", "도현", "건우", "우진", "선우", "서진", "민재", "현준", "연우",
+    "유준", "정우", "승우", "승현", "시윤", "승민", "지환", "승준", "유진", "지훈",
+    "서연", "서윤", "지우", "서현", "민서", "하은", "하윤", "윤서", "지유", "채원",
+    "지안", "수아", "소율", "예은", "다은", "예린", "수빈", "소윤", "지민", "채은",
+    "서아", "예나", "채윤", "은서", "가은", "수연", "예서", "다인", "유나", "하린",
+    "소연", "민지", "지영", "수진", "영희", "영숙", "정아", "미영", "현정", "은지",
+    "철수", "영수", "민수", "동현", "상훈", "재훈", "태양", "성호", "진우", "상우"
+]
+
+def generate_korean_name():
+    """한글 이름 3글자 자동 생성 (성 1글자 + 이름 2글자)"""
+    last_name = random.choice(LAST_NAMES)
+    first_name = random.choice(FIRST_NAMES)
+    return f"{last_name}{first_name}"
 
 # 카테고리별 제목 템플릿
 TITLE_TEMPLATES = {
@@ -249,10 +264,10 @@ def generate_reviews(products, review_count):
         title_list = TITLE_TEMPLATES.get(category, TITLE_TEMPLATES["액상"])
         review_title = random.choice(title_list)
         
-        # 작성자 이름 선택 (중복 방지)
+        # 작성자 이름 생성 (한글 이름 3글자 자동 생성, 중복 방지)
         author_name = None
         for attempt in range(50):
-            temp_name = random.choice(REVIEWER_NAMES)
+            temp_name = generate_korean_name()
             if temp_name not in used_names:
                 author_name = temp_name
                 used_names.add(author_name)
@@ -260,7 +275,7 @@ def generate_reviews(products, review_count):
         
         # 중복을 피할 수 없으면 그냥 사용
         if author_name is None:
-            author_name = random.choice(REVIEWER_NAMES)
+            author_name = generate_korean_name()
         
         # 리뷰 데이터 생성
         review = {
