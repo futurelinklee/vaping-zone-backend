@@ -91,8 +91,8 @@ REVIEWER_NAMES = [
     "happy***", "user***", "good***", "nice***"
 ]
 
-def generate_random_datetime(days_back=30):
-    """랜덤 날짜/시간 생성 (최근 30일 이내)"""
+def generate_random_datetime(days_back=3):
+    """랜덤 날짜/시간 생성 (당일~3일 전)"""
     now = datetime.now()
     random_days = random.randint(0, days_back)
     random_hours = random.randint(0, 23)

@@ -359,14 +359,16 @@ def generate_review_for_product(product_name, product_type):
     return random.choice(templates)
 
 def generate_random_datetime_3days_ago():
-    """정확히 3일 전 날짜에 랜덤 시간 생성 (국대쥬스 형식: 2025-04-04T07:20:55)"""
-    three_days_ago = datetime.now() - timedelta(days=3)
+    """당일~3일 전 랜덤 날짜/시간 생성 (국대쥬스 형식: 2025-04-04T07:20:55)"""
+    # 0~3일 전 중 랜덤 선택
+    random_days_ago = random.randint(0, 3)
+    target_date = datetime.now() - timedelta(days=random_days_ago)
     
     random_hour = random.randint(0, 23)
     random_minute = random.randint(0, 59)
     random_second = random.randint(0, 59)
     
-    result_datetime = three_days_ago.replace(
+    result_datetime = target_date.replace(
         hour=random_hour,
         minute=random_minute,
         second=random_second,
