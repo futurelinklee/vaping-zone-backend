@@ -10,6 +10,19 @@ from datetime import datetime, timedelta
 import random
 import json
 import sys
+from openai import OpenAI
+
+# OpenAI 클라이언트 초기화 (선택사항)
+try:
+    import os
+    api_key = os.environ.get('OPENAI_API_KEY')
+    if api_key:
+        client = OpenAI(api_key=api_key)
+        GPT_ENABLED = True
+    else:
+        GPT_ENABLED = False
+except Exception:
+    GPT_ENABLED = False
 
 # 종류별 리뷰 템플릿 (길고 자연스럽게)
 REVIEW_TEMPLATES = {
@@ -120,6 +133,118 @@ def generate_korean_name():
     last_name = random.choice(LAST_NAMES)
     first_name = random.choice(FIRST_NAMES)
     return f"{last_name}{first_name}"
+
+def generate_review_with_gpt(category):
+    """GPT로 리뷰 생성 (70~120자) - 매번 다른 리뷰 생성"""
+    if not GPT_ENABLED:
+        return None
+    
+    try:
+        # 카테고리별 언급 포인트
+        category_points = {
+            '액상': ['맛과 향', '목넘김', '가격', '재구매 의향', '질림 여부'],
+            '기기': ['배터리', '디자인', '휴대성', '성능', '충전', '조작감'],
+            '일회용': ['휴대성', '맛', '사용 기간', '간편함', '가성비']
+        }
+        
+        points = category_points.get(category, ['사용 경험'])
+        selected_point = random.choice(points)
+        
+        tone_variations = [
+            '친근하고 캐주얼한 말투',
+            '담백하고 사실적인 서술',
+            '경험 중심의 구체적 표현',
+            '간결하고 솔직한 표현'
+        ]
+        selected_tone = random.choice(tone_variations)
+        
+        prompt = f"""전자담배 제품 리뷰를 작성해주세요.
+
+카테고리: {category}
+중점 언급: {selected_point}
+말투: {selected_tone}
+
+**중요**: 매번 완전히 다른 표현을 사용하세요.
+
+작성 조건:
+- 70~120자 (구체적이고 자연스럽게)
+- 2~3문장으로 구성
+- 실제 사용 경험 포함
+- 긍정적 또는 중립적 내용
+- 제품명 언급 금지
+- 이모지, 해시태그 금지
+- 광고 같은 표현 금지
+
+예시 길이: "처음 구매해봤는데 향도 좋고 목넘김도 부드러워서 정말 만족스럽습니다. 가격도 합리적이고 배송도 빨라서 좋았어요. 다음에도 또 구매할 생각입니다."
+
+리뷰 내용만 출력하세요."""
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "당신은 실제 전자담배 사용자입니다. 매번 완전히 다른 표현과 단어를 사용하여 다양한 리뷰를 작성합니다."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=1.2,
+            max_tokens=200,
+            presence_penalty=0.8,
+            frequency_penalty=0.8
+        )
+        
+        review = response.choices[0].message.content.strip()
+        review = review.replace('"', '').replace("'", '').strip()
+        
+        # 70~120자 범위 체크
+        if len(review) > 120:
+            review = review[:120]
+        elif len(review) < 50:  # 너무 짧으면 템플릿 사용
+            return None
+        
+        return review
+        
+    except Exception as e:
+        return None
+
+def generate_title_with_gpt(category):
+    """GPT로 제목 생성"""
+    if not GPT_ENABLED:
+        return None
+    
+    try:
+        prompt = f"""전자담배 리뷰 제목을 작성해주세요.
+
+카테고리: {category}
+
+조건:
+- 10~15자
+- 간결하고 자연스럽게
+- 긍정적 또는 중립적
+- 이모지 금지
+
+예시: "만족스러운 제품이에요", "재구매 의향 100%"
+
+제목만 출력하세요."""
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "당신은 전자담배 리뷰 작성자입니다."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=1.0,
+            max_tokens=30
+        )
+        
+        title = response.choices[0].message.content.strip()
+        title = title.replace('"', '').replace("'", '').strip()
+        
+        if len(title) > 20:
+            title = title[:20]
+        
+        return title
+        
+    except Exception as e:
+        return None
 
 # 카테고리별 제목 템플릿
 TITLE_TEMPLATES = {
@@ -243,26 +368,39 @@ def generate_reviews(products, review_count):
         # 종류에서 카테고리 감지
         category = detect_category(product.get("type", ""))
         
-        # 카테고리에 맞는 리뷰 템플릿 선택 (중복 방지)
-        template_list = REVIEW_TEMPLATES.get(category, REVIEW_TEMPLATES["액상"])
+        # GPT로 리뷰 생성 시도 (중복 방지)
         review_content = None
         for attempt in range(50):
-            temp_review = random.choice(template_list)
-            if temp_review not in used_reviews:
+            temp_review = generate_review_with_gpt(category)
+            if temp_review and temp_review not in used_reviews:
                 review_content = temp_review
                 used_reviews.add(review_content)
                 break
         
-        # 중복을 피할 수 없으면 약간 변형
+        # GPT 실패 시 템플릿 사용 (중복 방지)
         if review_content is None:
-            review_content = random.choice(template_list)
-            suffix = random.choice(['', ' ', '!', '~'])
-            review_content = review_content + suffix
-            used_reviews.add(review_content)
+            template_list = REVIEW_TEMPLATES.get(category, REVIEW_TEMPLATES["액상"])
+            for attempt in range(50):
+                temp_review = random.choice(template_list)
+                if temp_review not in used_reviews:
+                    review_content = temp_review
+                    used_reviews.add(review_content)
+                    break
+            
+            # 중복을 피할 수 없으면 약간 변형
+            if review_content is None:
+                review_content = random.choice(template_list)
+                suffix = random.choice(['', ' ', '!', '~'])
+                review_content = review_content + suffix
+                used_reviews.add(review_content)
         
-        # 제목 생성 (카테고리별 템플릿 사용)
-        title_list = TITLE_TEMPLATES.get(category, TITLE_TEMPLATES["액상"])
-        review_title = random.choice(title_list)
+        # GPT로 제목 생성 시도
+        review_title = generate_title_with_gpt(category)
+        
+        # GPT 실패 시 템플릿 사용
+        if review_title is None:
+            title_list = TITLE_TEMPLATES.get(category, TITLE_TEMPLATES["액상"])
+            review_title = random.choice(title_list)
         
         # 작성자 이름 생성 (한글 이름 3글자 자동 생성, 중복 방지)
         author_name = None

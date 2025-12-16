@@ -328,13 +328,16 @@ def generate_review_with_gpt(product_name, category):
 **중요**: 매번 완전히 다른 표현과 단어를 사용하세요. 이전 리뷰와 유사한 패턴은 피하세요.
 
 작성 조건:
-- 전체 50자 이내
-- 1~2문장으로 간결하게
+- 전체 40~50자 (최소 40자, 최대 50자)
+- 2문장 정도로 구체적으로
 - 실제 사용자 말투 (ㅋㅋ, ㄹㅇ, 갠적으로, 나름, 뭐, 좀 등)
 - 긍정적이거나 중립적인 내용만
 - 제품명 언급 금지
 - 이모지, 해시태그 금지
 - 광고 같은 표현 금지
+- 구체적인 사용 경험 포함
+
+예시 길이: "맛 괜찮고 가격도 착한편이에요 재구매 의향 있습니다" (29자 → 더 길게!)
 
 리뷰 내용만 출력하세요."""
 
@@ -353,9 +356,11 @@ def generate_review_with_gpt(product_name, category):
         review = response.choices[0].message.content.strip()
         review = review.replace('"', '').replace("'", '').strip()
         
-        # 50자 제한
+        # 40~50자 범위 체크
         if len(review) > 50:
             review = review[:50]
+        elif len(review) < 25:  # 너무 짧으면 템플릿 사용
+            return None
         
         return review
         
