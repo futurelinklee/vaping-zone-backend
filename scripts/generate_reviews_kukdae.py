@@ -397,18 +397,50 @@ def create_kukdae_excel(products, review_count, template_path, output_path):
     
     current_row = 2
     
+    # 중복 방지를 위한 세트
+    used_reviews = set()
+    used_names = set()
+    
     for _ in range(review_count):
         # 랜덤 상품 선택
         product = random.choice(products)
         
-        # 리뷰 생성
-        review_content = generate_review_for_product(product['name'], product['type'])
+        # 리뷰 생성 (중복 방지)
+        review_content = None
+        for attempt in range(50):  # 최대 50번 시도
+            temp_review = generate_review_for_product(product['name'], product['type'])
+            if temp_review not in used_reviews:
+                review_content = temp_review
+                used_reviews.add(review_content)
+                break
         
-        # 이름 생성
-        if GPT_ENABLED:
-            writer_name = generate_korean_name_with_gpt()
-        else:
-            writer_name = random.choice(REVIEWER_NAMES)
+        # 중복을 피할 수 없으면 약간 변형
+        if review_content is None:
+            review_content = generate_review_for_product(product['name'], product['type'])
+            # 끝에 공백이나 문장부호 추가로 변형
+            suffix = random.choice(['', ' ', '!', '~'])
+            review_content = review_content + suffix
+            used_reviews.add(review_content)
+        
+        # 이름 생성 (중복 방지)
+        writer_name = None
+        for attempt in range(50):
+            if GPT_ENABLED:
+                temp_name = generate_korean_name_with_gpt()
+            else:
+                temp_name = random.choice(REVIEWER_NAMES)
+            
+            if temp_name not in used_names:
+                writer_name = temp_name
+                used_names.add(writer_name)
+                break
+        
+        # 중복을 피할 수 없으면 그냥 사용
+        if writer_name is None:
+            if GPT_ENABLED:
+                writer_name = generate_korean_name_with_gpt()
+            else:
+                writer_name = random.choice(REVIEWER_NAMES)
         
         # 날짜 생성
         writer_at = generate_random_datetime_3days_ago()
