@@ -316,6 +316,33 @@ TITLE_TEMPLATES = {
     ]
 }
 
+def generate_title_from_content(review_content):
+    """리뷰 내용을 30자 이내로 요약하여 제목 생성"""
+    if not review_content:
+        return "만족스러운 제품이에요"
+    
+    # 리뷰 내용이 30자 이하면 그대로 사용
+    if len(review_content) <= 30:
+        return review_content
+    
+    # 문장 단위로 분리
+    sentences = review_content.replace('. ', '。').replace('! ', '。').replace('? ', '。').split('。')
+    
+    # 첫 번째 문장 사용 (30자 이내)
+    first_sentence = sentences[0].strip()
+    if len(first_sentence) <= 30:
+        return first_sentence
+    
+    # 30자로 자르되, 단어 중간이 아닌 곳에서 자르기
+    title = review_content[:30]
+    
+    # 마지막 공백 위치 찾기
+    last_space = title.rfind(' ')
+    if last_space > 20:  # 최소 20자는 유지
+        title = title[:last_space]
+    
+    return title.strip()
+
 def generate_random_datetime(days_back=3):
     """랜덤 날짜/시간 생성 (어제~3일 전, 미래 시간 방지)"""
     now = datetime.now()
@@ -396,13 +423,8 @@ def generate_reviews(products, review_count):
                 review_content = review_content + suffix
                 used_reviews.add(review_content)
         
-        # GPT로 제목 생성 시도
-        review_title = generate_title_with_gpt(category)
-        
-        # GPT 실패 시 템플릿 사용
-        if review_title is None:
-            title_list = TITLE_TEMPLATES.get(category, TITLE_TEMPLATES["액상"])
-            review_title = random.choice(title_list)
+        # 리뷰 내용에서 제목 생성 (30자 이내 요약)
+        review_title = generate_title_from_content(review_content)
         
         # 작성자 이름 생성 (한글 이름 3글자 자동 생성, 중복 방지)
         author_name = None
