@@ -193,3 +193,148 @@ if __name__ == '__main__':
     print(f"📍 상품 로드: GET /api/load-products")
     print(f"📍 리뷰 생성: POST /api/generate-reviews")
     app.run(host='0.0.0.0', port=port, debug=False)
+
+# ============================================
+# 상품 관리 API 엔드포인트
+# ============================================
+
+@app.route('/api/products/<channel>', methods=['GET'])
+def get_products(channel):
+    """채널별 상품 목록 조회"""
+    try:
+        import openpyxl
+        
+        # 채널별 파일 매핑
+        file_map = {
+            'vapingzone': 'data/upload_template.xlsx',
+            'juiceon': 'data/juiceon_template.xlsx',
+            'kukdae': 'data/kukdae_template.xlsx'
+        }
+        
+        if channel not in file_map:
+            return jsonify({'error': '유효하지 않은 채널입니다.'}), 400
+        
+        file_path = os.path.join(BASE_DIR, file_map[channel])
+        
+        if not os.path.exists(file_path):
+            return jsonify({'error': '상품 파일을 찾을 수 없습니다.'}), 404
+        
+        wb = openpyxl.load_workbook(file_path)
+        sheet = wb.active
+        
+        products = []
+        for row in sheet.iter_rows(min_row=2, values_only=True):
+            if row[0]:  # product_no가 있으면
+                products.append({
+                    'product_no': row[0],
+                    'category': row[1] if len(row) > 1 else '',
+                    'name': row[2] if len(row) > 2 else ''
+                })
+        
+        return jsonify({'products': products, 'count': len(products)})
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/products/<channel>', methods=['POST'])
+def add_product(channel):
+    """상품 추가"""
+    try:
+        import openpyxl
+        
+        file_map = {
+            'vapingzone': 'data/upload_template.xlsx',
+            'juiceon': 'data/juiceon_template.xlsx',
+            'kukdae': 'data/kukdae_template.xlsx'
+        }
+        
+        if channel not in file_map:
+            return jsonify({'error': '유효하지 않은 채널입니다.'}), 400
+        
+        data = request.json
+        product_no = data.get('product_no')
+        category = data.get('category')
+        name = data.get('name')
+        
+        if not all([product_no, category, name]):
+            return jsonify({'error': '모든 필드를 입력해주세요.'}), 400
+        
+        file_path = os.path.join(BASE_DIR, file_map[channel])
+        wb = openpyxl.load_workbook(file_path)
+        sheet = wb.active
+        
+        # 중복 체크
+        for row in sheet.iter_rows(min_row=2, values_only=True):
+            if row[0] == product_no:
+                return jsonify({'error': '이미 존재하는 상품번호입니다.'}), 400
+        
+        # 새 행 추가
+        sheet.append([product_no, category, name])
+        wb.save(file_path)
+        
+        return jsonify({'message': '상품이 추가되었습니다.', 'product': data}), 201
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/products/<channel>/<int:product_no>', methods=['DELETE'])
+def delete_product(channel, product_no):
+    """상품 삭제"""
+    try:
+        import openpyxl
+        
+        file_map = {
+            'vapingzone': 'data/upload_template.xlsx',
+            'juiceon': 'data/juiceon_template.xlsx',
+            'kukdae': 'data/kukdae_template.xlsx'
+        }
+        
+        if channel not in file_map:
+            return jsonify({'error': '유효하지 않은 채널입니다.'}), 400
+        
+        file_path = os.path.join(BASE_DIR, file_map[channel])
+        wb = openpyxl.load_workbook(file_path)
+        sheet = wb.active
+        
+        # 삭제할 행 찾기
+        row_to_delete = None
+        for idx, row in enumerate(sheet.iter_rows(min_row=2), start=2):
+            if row[0].value == product_no:
+                row_to_delete = idx
+                break
+        
+        if row_to_delete is None:
+            return jsonify({'error': '상품을 찾을 수 없습니다.'}), 404
+        
+        sheet.delete_rows(row_to_delete)
+        wb.save(file_path)
+        
+        return jsonify({'message': '상품이 삭제되었습니다.'}), 200
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/products/<channel>/download', methods=['GET'])
+def download_products(channel):
+    """상품 목록 엑셀 다운로드"""
+    try:
+        file_map = {
+            'vapingzone': 'data/upload_template.xlsx',
+            'juiceon': 'data/juiceon_template.xlsx',
+            'kukdae': 'data/kukdae_template.xlsx'
+        }
+        
+        if channel not in file_map:
+            return jsonify({'error': '유효하지 않은 채널입니다.'}), 400
+        
+        file_path = os.path.join(BASE_DIR, file_map[channel])
+        
+        if not os.path.exists(file_path):
+            return jsonify({'error': '파일을 찾을 수 없습니다.'}), 404
+        
+        filename = f'{channel}_products.xlsx'
+        return send_file(file_path, as_attachment=True, download_name=filename)
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
