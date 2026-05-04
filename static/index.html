@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>베이핑존 상품 관리 시스템</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -145,34 +146,6 @@
             flex-wrap: wrap;
         }
         
-        .input-group {
-            flex: 1;
-            min-width: 150px;
-        }
-        
-        .input-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .input-group input,
-        .input-group select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 1em;
-            transition: border 0.3s;
-        }
-        
-        .input-group input:focus,
-        .input-group select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
         .btn {
             padding: 12px 30px;
             border: none;
@@ -189,23 +162,8 @@
             box-shadow: 0 6px 15px rgba(0,0,0,0.15);
         }
         
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
         .btn-success {
             background: #28a745;
-            color: white;
-        }
-        
-        .btn-warning {
-            background: #ffc107;
-            color: #333;
-        }
-        
-        .btn-danger {
-            background: #dc3545;
             color: white;
         }
         
@@ -374,74 +332,6 @@
             color: #999;
         }
         
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.3s ease-out;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        .modal.active {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            animation: slideUp 0.3s ease-out;
-        }
-        
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .modal-header {
-            margin-bottom: 20px;
-        }
-        
-        .modal-header h2 {
-            color: #667eea;
-            font-size: 1.8em;
-        }
-        
-        .modal-body {
-            margin-bottom: 25px;
-        }
-        
-        .modal-footer {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-        }
-        
         .product-checkbox {
             width: 20px;
             height: 20px;
@@ -462,22 +352,34 @@
             color: #1976d2;
             font-size: 1.1em;
         }
+
+        .file-upload {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px dashed #667eea;
+        }
+
+        .file-upload input[type="file"] {
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>🛍️ 베이핑존 상품 관리 시스템 v3.1</h1>
-            <p>상품 추가, 수정, 삭제 및 리뷰 생성을 간편하게 관리하세요</p>
+            <p>엑셀 파일에서 직접 상품 목록을 불러와 리뷰를 생성하세요</p>
             
             <div class="api-config">
-                <h3>🔑 API 키 설정</h3>
+                <h3>🔑 API 키 설정 (리뷰 생성용)</h3>
                 <div class="api-input-group">
                     <input type="password" id="api-key-input" placeholder="API 키를 입력하세요 (예: vaping-zone-2024-secret-key)" value="">
-                    <button class="btn btn-primary" onclick="saveAndTestAPIKey()">💾 저장 및 검증</button>
+                    <button class="btn btn-info" onclick="saveAPIKey()">💾 저장</button>
                     <span class="api-status disconnected" id="api-status">⚠️ 미설정</span>
                 </div>
-                <small style="color: #666;">💡 API 키를 입력하고 저장하면 자동으로 인증 및 연결을 확인합니다</small>
+                <small style="color: #666;">💡 API 키는 리뷰 생성 시에만 필요합니다</small>
             </div>
         </div>
         
@@ -491,6 +393,13 @@
         
         <div id="vapingzone" class="tab-content active">
             <h2>베이핑존 상품 관리</h2>
+            
+            <div class="file-upload">
+                <label>📁 엑셀 파일 업로드: </label>
+                <input type="file" id="vapingzone-file" accept=".xlsx,.xls" onchange="loadExcelFile('vapingzone')">
+                <button class="btn btn-info" onclick="downloadExcelTemplate('vapingzone')">📥 엑셀 양식 다운로드</button>
+            </div>
+
             <div class="stats">
                 <div class="stat-card">
                     <h3 id="vapingzone-count">0</h3>
@@ -511,24 +420,6 @@
             </div>
             
             <div class="controls">
-                <div class="input-group">
-                    <label>상품번호</label>
-                    <input type="text" id="vapingzone-product-no" placeholder="예: 297">
-                </div>
-                <div class="input-group">
-                    <label>상품명</label>
-                    <input type="text" id="vapingzone-product-name" placeholder="예: 칠렉스 비타 일회용 10000 PUFF">
-                </div>
-                <div class="input-group">
-                    <label>카테고리</label>
-                    <select id="vapingzone-category">
-                        <option value="기타">기타</option>
-                        <option value="일회용">일회용</option>
-                        <option value="액상">액상</option>
-                    </select>
-                </div>
-                <button class="btn btn-primary" onclick="addProduct('vapingzone')">➕ 상품 추가</button>
-                <button class="btn btn-info" onclick="downloadProducts('vapingzone')">📥 엑셀 다운로드</button>
                 <button class="btn btn-success" onclick="generateReviews('vapingzone')">📝 리뷰 생성</button>
             </div>
             
@@ -552,7 +443,6 @@
                         <th width="80">상품번호</th>
                         <th>상품명</th>
                         <th width="100">카테고리</th>
-                        <th width="160">작업</th>
                     </tr>
                 </thead>
                 <tbody id="vapingzone-tbody"></tbody>
@@ -561,6 +451,13 @@
         
         <div id="juiceon" class="tab-content">
             <h2>쥬스온 상품 관리</h2>
+            
+            <div class="file-upload">
+                <label>📁 엑셀 파일 업로드: </label>
+                <input type="file" id="juiceon-file" accept=".xlsx,.xls" onchange="loadExcelFile('juiceon')">
+                <button class="btn btn-info" onclick="downloadExcelTemplate('juiceon')">📥 엑셀 양식 다운로드</button>
+            </div>
+
             <div class="stats">
                 <div class="stat-card">
                     <h3 id="juiceon-count">0</h3>
@@ -581,24 +478,6 @@
             </div>
             
             <div class="controls">
-                <div class="input-group">
-                    <label>상품번호</label>
-                    <input type="text" id="juiceon-product-no" placeholder="예: 451">
-                </div>
-                <div class="input-group">
-                    <label>상품명</label>
-                    <input type="text" id="juiceon-product-name" placeholder="예: 디오 2X 악마 스타터 패키지">
-                </div>
-                <div class="input-group">
-                    <label>카테고리</label>
-                    <select id="juiceon-category">
-                        <option value="기타">기타</option>
-                        <option value="일회용">일회용</option>
-                        <option value="액상">액상</option>
-                    </select>
-                </div>
-                <button class="btn btn-primary" onclick="addProduct('juiceon')">➕ 상품 추가</button>
-                <button class="btn btn-info" onclick="downloadProducts('juiceon')">📥 엑셀 다운로드</button>
                 <button class="btn btn-success" onclick="generateReviews('juiceon')">📝 리뷰 생성</button>
             </div>
             
@@ -622,7 +501,6 @@
                         <th width="80">상품번호</th>
                         <th>상품명</th>
                         <th width="100">카테고리</th>
-                        <th width="160">작업</th>
                     </tr>
                 </thead>
                 <tbody id="juiceon-tbody"></tbody>
@@ -631,6 +509,13 @@
         
         <div id="kukdae" class="tab-content">
             <h2>국대쥬스 상품 관리</h2>
+            
+            <div class="file-upload">
+                <label>📁 엑셀 파일 업로드: </label>
+                <input type="file" id="kukdae-file" accept=".xlsx,.xls" onchange="loadExcelFile('kukdae')">
+                <button class="btn btn-info" onclick="downloadExcelTemplate('kukdae')">📥 엑셀 양식 다운로드</button>
+            </div>
+
             <div class="stats">
                 <div class="stat-card">
                     <h3 id="kukdae-count">0</h3>
@@ -651,24 +536,6 @@
             </div>
             
             <div class="controls">
-                <div class="input-group">
-                    <label>상품번호</label>
-                    <input type="text" id="kukdae-product-no" placeholder="예: 452">
-                </div>
-                <div class="input-group">
-                    <label>상품명</label>
-                    <input type="text" id="kukdae-product-name" placeholder="예: 젤루좋아 입문 세트">
-                </div>
-                <div class="input-group">
-                    <label>카테고리</label>
-                    <select id="kukdae-category">
-                        <option value="기타">기타</option>
-                        <option value="일회용">일회용</option>
-                        <option value="액상">액상</option>
-                    </select>
-                </div>
-                <button class="btn btn-primary" onclick="addProduct('kukdae')">➕ 상품 추가</button>
-                <button class="btn btn-info" onclick="downloadProducts('kukdae')">📥 엑셀 다운로드</button>
                 <button class="btn btn-success" onclick="generateReviews('kukdae')">📝 리뷰 생성</button>
             </div>
             
@@ -692,41 +559,10 @@
                         <th width="80">상품번호</th>
                         <th>상품명</th>
                         <th width="100">카테고리</th>
-                        <th width="160">작업</th>
                     </tr>
                 </thead>
                 <tbody id="kukdae-tbody"></tbody>
             </table>
-        </div>
-    </div>
-    
-    <div id="edit-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>✏️ 상품 수정</h2>
-            </div>
-            <div class="modal-body">
-                <div class="input-group" style="margin-bottom: 15px;">
-                    <label>상품번호</label>
-                    <input type="text" id="edit-product-no" placeholder="상품번호 입력">
-                </div>
-                <div class="input-group" style="margin-bottom: 15px;">
-                    <label>상품명</label>
-                    <input type="text" id="edit-product-name" placeholder="상품명 입력">
-                </div>
-                <div class="input-group">
-                    <label>카테고리</label>
-                    <select id="edit-category">
-                        <option value="기타">기타</option>
-                        <option value="일회용">일회용</option>
-                        <option value="액상">액상</option>
-                    </select>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeEditModal()">취소</button>
-                <button class="btn btn-primary" onclick="saveEdit()">💾 저장</button>
-            </div>
         </div>
     </div>
     
@@ -744,7 +580,6 @@
             juiceon: new Set(),
             kukdae: new Set()
         };
-        let editingProduct = null;
         
         function switchTab(channel) {
             currentChannel = channel;
@@ -754,8 +589,6 @@
             
             event.target.classList.add('active');
             document.getElementById(channel).classList.add('active');
-            
-            loadProducts(channel);
         }
         
         function showAlert(message, type = 'success') {
@@ -768,45 +601,52 @@
             setTimeout(() => alert.remove(), 5000);
         }
         
-        async function loadProducts(channel) {
-            const loading = document.getElementById(`${channel}-loading`);
-            const tbody = document.getElementById(`${channel}-tbody`);
+        function loadExcelFile(channel) {
+            const fileInput = document.getElementById(`${channel}-file`);
+            const file = fileInput.files[0];
             
+            if (!file) {
+                showAlert('파일을 선택하세요', 'error');
+                return;
+            }
+            
+            const loading = document.getElementById(`${channel}-loading`);
             loading.classList.add('active');
             
-            try {
-                const response = await fetch(`${API_URL}/api/products/${channel}`, {
-                    headers: getAuthHeaders()
-                });
-                
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || `HTTP ${response.status}`);
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                    
+                    const products = jsonData.map(row => ({
+                        product_no: String(row['상품번호'] || row['product_no'] || ''),
+                        product_name: String(row['상품명'] || row['product_name'] || ''),
+                        category: String(row['카테고리'] || row['category'] || '기타')
+                    })).filter(p => p.product_no && p.product_name);
+                    
+                    allProducts[channel] = products;
+                    displayProducts(channel, products);
+                    updateStats(channel, products);
+                    
+                    showAlert(`✅ ${products.length}개 상품 로드 완료!`, 'success');
+                } catch (error) {
+                    showAlert('엑셀 파일 읽기 실패: ' + error.message, 'error');
+                } finally {
+                    loading.classList.remove('active');
                 }
-                
-                const products = await response.json();
-                
-                if (!Array.isArray(products)) {
-                    throw new Error('서버 응답 형식이 올바르지 않습니다');
-                }
-                
-                allProducts[channel] = products;
-                displayProducts(channel, products);
-                updateStats(channel, products);
-            } catch (error) {
-                showAlert('상품 목록 로드 실패: ' + error.message, 'error');
-                tbody.innerHTML = '<tr><td colspan="5" class="empty-state">상품을 불러올 수 없습니다</td></tr>';
-                allProducts[channel] = [];
-            } finally {
-                loading.classList.remove('active');
-            }
+            };
+            
+            reader.readAsArrayBuffer(file);
         }
         
         function displayProducts(channel, products) {
             const tbody = document.getElementById(`${channel}-tbody`);
             
             if (products.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="empty-state">상품이 없습니다</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="empty-state">엑셀 파일을 업로드하세요</td></tr>';
                 return;
             }
             
@@ -821,12 +661,6 @@
                     <td>${p.product_no}</td>
                     <td>${p.product_name}</td>
                     <td><span class="category-badge category-${p.category || '기타'}">${p.category || '기타'}</span></td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn btn-warning" onclick="openEditModal('${channel}', '${p.product_no}', \`${p.product_name.replace(/`/g, '\\`')}\`, '${p.category || '기타'}')">✏️</button>
-                            <button class="btn btn-danger" onclick="deleteProduct('${channel}', '${p.product_no}')">🗑️</button>
-                        </div>
-                    </td>
                 </tr>
             `).join('');
         }
@@ -899,105 +733,6 @@
             });
         }
         
-        async function addProduct(channel) {
-            const productNo = document.getElementById(`${channel}-product-no`).value.trim();
-            const productName = document.getElementById(`${channel}-product-name`).value.trim();
-            const category = document.getElementById(`${channel}-category`).value;
-            
-            if (!productNo || !productName) {
-                showAlert('상품번호와 상품명을 모두 입력하세요', 'error');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_URL}/api/products/${channel}`, {
-                    method: 'POST',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify({ product_no: productNo, product_name: productName, category: category })
-                });
-                
-                if (response.ok) {
-                    showAlert('✅ 상품이 추가되었습니다', 'success');
-                    document.getElementById(`${channel}-product-no`).value = '';
-                    document.getElementById(`${channel}-product-name`).value = '';
-                    document.getElementById(`${channel}-category`).value = '기타';
-                    loadProducts(channel);
-                } else {
-                    const error = await response.json();
-                    showAlert('❌ ' + error.error, 'error');
-                }
-            } catch (error) {
-                showAlert('❌ 상품 추가 실패: ' + error.message, 'error');
-            }
-        }
-        
-        function openEditModal(channel, productNo, productName, category) {
-            editingProduct = { channel, oldProductNo: productNo };
-            document.getElementById('edit-product-no').value = productNo;
-            document.getElementById('edit-product-name').value = productName;
-            document.getElementById('edit-category').value = category || '기타';
-            document.getElementById('edit-modal').classList.add('active');
-        }
-        
-        function closeEditModal() {
-            document.getElementById('edit-modal').classList.remove('active');
-            editingProduct = null;
-        }
-        
-        async function saveEdit() {
-            if (!editingProduct) return;
-            
-            const newProductNo = document.getElementById('edit-product-no').value.trim();
-            const newProductName = document.getElementById('edit-product-name').value.trim();
-            const newCategory = document.getElementById('edit-category').value;
-            
-            if (!newProductNo || !newProductName) {
-                showAlert('상품번호와 상품명을 모두 입력하세요', 'error');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_URL}/api/products/${editingProduct.channel}/${editingProduct.oldProductNo}`, {
-                    method: 'PUT',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify({ product_no: newProductNo, product_name: newProductName, category: newCategory })
-                });
-                
-                if (response.ok) {
-                    showAlert('✅ 상품이 수정되었습니다', 'success');
-                    closeEditModal();
-                    loadProducts(editingProduct.channel);
-                } else {
-                    const error = await response.json();
-                    showAlert('❌ ' + error.error, 'error');
-                }
-            } catch (error) {
-                showAlert('❌ 상품 수정 실패: ' + error.message, 'error');
-            }
-        }
-        
-        async function deleteProduct(channel, productNo) {
-            if (!confirm(`상품번호 ${productNo}를 삭제하시겠습니까?`)) return;
-            
-            try {
-                const response = await fetch(`${API_URL}/api/products/${channel}/${productNo}`, {
-                    method: 'DELETE',
-                    headers: getAuthHeaders()
-                });
-                
-                if (response.ok) {
-                    showAlert('✅ 상품이 삭제되었습니다', 'success');
-                    selectedProducts[channel].delete(productNo);
-                    loadProducts(channel);
-                } else {
-                    const error = await response.json();
-                    showAlert('❌ ' + error.error, 'error');
-                }
-            } catch (error) {
-                showAlert('❌ 상품 삭제 실패: ' + error.message, 'error');
-            }
-        }
-        
         function searchProducts(channel) {
             const searchTerm = document.getElementById(`${channel}-search`).value.toLowerCase();
             const filtered = allProducts[channel].filter(p => 
@@ -1008,16 +743,16 @@
             displayProducts(channel, filtered);
         }
         
-        function downloadProducts(channel) {
-            window.location.href = `${API_URL}/api/products/${channel}/download`;
-            showAlert('📥 엑셀 다운로드를 시작합니다', 'info');
-        }
-        
         async function generateReviews(channel) {
             const selected = Array.from(selectedProducts[channel]);
             
             if (selected.length === 0) {
                 showAlert('❌ 리뷰를 생성할 상품을 선택하세요', 'error');
+                return;
+            }
+            
+            if (!API_KEY) {
+                showAlert('❌ API 키를 먼저 설정하세요', 'error');
                 return;
             }
             
@@ -1029,7 +764,10 @@
             try {
                 const response = await fetch(`${API_URL}/api/generate-reviews`, {
                     method: 'POST',
-                    headers: getAuthHeaders(),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_KEY}`
+                    },
                     body: JSON.stringify({ 
                         channel: channel, 
                         count: parseInt(count),
@@ -1046,21 +784,35 @@
                     a.click();
                     showAlert(`✅ 선택한 ${selected.length}개 상품에 대해 ${count}개의 리뷰가 생성되었습니다`, 'success');
                 } else {
-                    showAlert('❌ 리뷰 생성 실패', 'error');
+                    const error = await response.json();
+                    showAlert('❌ ' + error.error, 'error');
                 }
             } catch (error) {
                 showAlert('❌ 리뷰 생성 실패: ' + error.message, 'error');
             }
         }
         
-        window.onclick = function(event) {
-            const modal = document.getElementById('edit-modal');
-            if (event.target === modal) {
-                closeEditModal();
-            }
+        function downloadExcelTemplate(channel) {
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet([
+                ['상품번호', '상품명', '카테고리'],
+                ['297', '칠렉스 비타 일회용 10000 PUFF', '액상'],
+                ['296', '칠렉스 비타 일회용 체리콜라', '액상']
+            ]);
+            
+            XLSX.utils.book_append_sheet(wb, ws, '상품목록');
+            
+            const channelNames = {
+                'vapingzone': '베이핑존',
+                'juiceon': '쥬스온',
+                'kukdae': '국대쥬스'
+            };
+            
+            XLSX.writeFile(wb, `${channelNames[channel]}_상품목록_양식.xlsx`);
+            showAlert('✅ 엑셀 양식 다운로드 완료!', 'success');
         }
         
-        async function saveAndTestAPIKey() {
+        function saveAPIKey() {
             const input = document.getElementById('api-key-input');
             const statusEl = document.getElementById('api-status');
             const apiKey = input.value.trim();
@@ -1070,39 +822,12 @@
                 return;
             }
             
-            statusEl.className = 'api-status checking';
-            statusEl.innerHTML = '🔄 검증 중...';
+            API_KEY = apiKey;
+            localStorage.setItem('vaping_api_key', apiKey);
             
-            try {
-                const response = await fetch(`${API_URL}/health`, {
-                    method: 'GET',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    
-                    API_KEY = apiKey;
-                    localStorage.setItem('vaping_api_key', apiKey);
-                    
-                    statusEl.className = 'api-status connected';
-                    statusEl.innerHTML = '✅ 인증됨';
-                    showAlert(`✅ API 키 인증 성공!\n서비스: ${data.service || '베이핑존 리뷰 시스템'}\n상태: 정상`, 'success');
-                    
-                    loadProducts(currentChannel);
-                } else if (response.status === 401 || response.status === 403) {
-                    throw new Error('인증 실패 - API 키가 올바르지 않습니다');
-                } else {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-            } catch (error) {
-                statusEl.className = 'api-status disconnected';
-                statusEl.innerHTML = '❌ 인증 실패';
-                showAlert(`❌ API 키 인증 실패: ${error.message}\n\nAPI 키를 확인하고 다시 시도하세요`, 'error');
-            }
+            statusEl.className = 'api-status connected';
+            statusEl.innerHTML = '✅ 저장됨';
+            showAlert('✅ API 키가 저장되었습니다', 'success');
         }
         
         function loadSavedAPIKey() {
@@ -1110,51 +835,15 @@
             if (saved) {
                 document.getElementById('api-key-input').value = saved;
                 API_KEY = saved;
-                checkAPIConnection();
-            }
-        }
-        
-        async function checkAPIConnection() {
-            const statusEl = document.getElementById('api-status');
-            
-            if (!API_KEY) {
-                statusEl.className = 'api-status disconnected';
-                statusEl.innerHTML = '⚠️ 미설정';
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_URL}/health`, {
-                    method: 'GET',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${API_KEY}`
-                    }
-                });
                 
-                if (response.ok) {
-                    statusEl.className = 'api-status connected';
-                    statusEl.innerHTML = '✅ 인증됨';
-                } else {
-                    throw new Error('Authentication failed');
-                }
-            } catch (error) {
-                statusEl.className = 'api-status disconnected';
-                statusEl.innerHTML = '⚠️ 미설정';
+                const statusEl = document.getElementById('api-status');
+                statusEl.className = 'api-status connected';
+                statusEl.innerHTML = '✅ 저장됨';
             }
-        }
-        
-        function getAuthHeaders() {
-            const headers = { 'Content-Type': 'application/json' };
-            if (API_KEY) {
-                headers['Authorization'] = `Bearer ${API_KEY}`;
-            }
-            return headers;
         }
         
         window.onload = () => {
             loadSavedAPIKey();
-            loadProducts('vapingzone');
         };
     </script>
 </body>
