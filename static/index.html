@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>베이핑존 상품 관리 시스템</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .integration-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .integration-info strong {
+            color: #1976d2;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 15px 30px;
+            background: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .tab-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .input-group {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border 0.3s;
+        }
+        
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card.category-basic {
+            background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+        }
+        
+        .stat-card.category-disposable {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        }
+        
+        .stat-card.category-liquid {
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+        }
+        
+        .stat-card h3 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .search-box {
+            margin-bottom: 20px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1.1em;
+        }
+        
+        .products-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .products-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .products-table th,
+        .products-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .products-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .products-table th {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .category-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        
+        .category-기타 {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .category-일회용 {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .category-액상 {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2em;
+            color: #667eea;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        
+        /* 모달 스타일 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal-header {
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h2 {
+            color: #667eea;
+            font-size: 1.8em;
+        }
+        
+        .modal-body {
+            margin-bottom: 25px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛍️ 베이핑존 상품 관리 시스템 v2.1</h1>
+            <p>상품 추가, 수정, 삭제 및 리뷰 생성을 간편하게 관리하세요</p>
+            <div class="integration-info">
+                <strong>🔗 Cloudflare Workers 연동:</strong> 이 백엔드 API는 
+                <a href="https://vaping-zone-review-generator.futurelinklee.workers.dev/" target="_blank" style="color: #1976d2; text-decoration: none; font-weight: bold;">
+                    vaping-zone-review-generator
+                </a>와 연동되어 있습니다
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('vapingzone')">베이핑존</button>
+            <button class="tab-btn" onclick="switchTab('juiceon')">쥬스온</button>
+            <button class="tab-btn" onclick="switchTab('kukdae')">국대쥬스</button>
+        </div>
+        
+        <div id="alert-container"></div>
+        
+        <div id="vapingzone" class="tab-content active">
+            <h2>베이핑존 상품 관리</h2>
+            <div class="stats">
+                <div class="stat-card">
+                    <h3 id="vapingzone-count">0</h3>
+                    <p>전체 상품</p>
+                </div>
+                <div class="stat-card category-basic">
+                    <h3 id="vapingzone-count-기타">0</h3>
+                    <p>기타</p>
+                </div>
+                <div class="stat-card category-disposable">
+                    <h3 id="vapingzone-count-일회용">0</h3>
+                    <p>일회용</p>
+                </div>
+                <div class="stat-card category-liquid">
+                    <h3 id="vapingzone-count-액상">0</h3>
+                    <p>액상</p>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="input-group">
+                    <label>상품번호</label>
+                    <input type="text" id="vapingzone-product-no" placeholder="예: 297">
+                </div>
+                <div class="input-group">
+                    <label>상품명</label>
+                    <input type="text" id="vapingzone-product-name" placeholder="예: 칠렉스 비타 일회용 10000 PUFF">
+                </div>
+                <div class="input-group">
+                    <label>카테고리</label>
+                    <select id="vapingzone-category">
+                        <option value="기타">기타</option>
+                        <option value="일회용">일회용</option>
+                        <option value="액상">액상</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="addProduct('vapingzone')">➕ 상품 추가</button>
+                <button class="btn btn-info" onclick="downloadProducts('vapingzone')">📥 엑셀 다운로드</button>
+                <button class="btn btn-success" onclick="generateReviews('vapingzone')">📝 리뷰 생성</button>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="vapingzone-search" placeholder="🔍 상품 검색..." onkeyup="searchProducts('vapingzone')">
+            </div>
+            
+            <div class="loading" id="vapingzone-loading">⏳ 로딩 중...</div>
+            
+            <table class="products-table" id="vapingzone-table">
+                <thead>
+                    <tr>
+                        <th width="80">상품번호</th>
+                        <th>상품명</th>
+                        <th width="100">카테고리</th>
+                        <th width="160">작업</th>
+                    </tr>
+                </thead>
+                <tbody id="vapingzone-tbody"></tbody>
+            </table>
+        </div>
+        
+        <div id="juiceon" class="tab-content">
+            <h2>쥬스온 상품 관리</h2>
+            <div class="stats">
+                <div class="stat-card">
+                    <h3 id="juiceon-count">0</h3>
+                    <p>전체 상품</p>
+                </div>
+                <div class="stat-card category-basic">
+                    <h3 id="juiceon-count-기타">0</h3>
+                    <p>기타</p>
+                </div>
+                <div class="stat-card category-disposable">
+                    <h3 id="juiceon-count-일회용">0</h3>
+                    <p>일회용</p>
+                </div>
+                <div class="stat-card category-liquid">
+                    <h3 id="juiceon-count-액상">0</h3>
+                    <p>액상</p>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="input-group">
+                    <label>상품번호</label>
+                    <input type="text" id="juiceon-product-no" placeholder="예: 451">
+                </div>
+                <div class="input-group">
+                    <label>상품명</label>
+                    <input type="text" id="juiceon-product-name" placeholder="예: 디오 2X 악마 스타터 패키지">
+                </div>
+                <div class="input-group">
+                    <label>카테고리</label>
+                    <select id="juiceon-category">
+                        <option value="기타">기타</option>
+                        <option value="일회용">일회용</option>
+                        <option value="액상">액상</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="addProduct('juiceon')">➕ 상품 추가</button>
+                <button class="btn btn-info" onclick="downloadProducts('juiceon')">📥 엑셀 다운로드</button>
+                <button class="btn btn-success" onclick="generateReviews('juiceon')">📝 리뷰 생성</button>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="juiceon-search" placeholder="🔍 상품 검색..." onkeyup="searchProducts('juiceon')">
+            </div>
+            
+            <div class="loading" id="juiceon-loading">⏳ 로딩 중...</div>
+            
+            <table class="products-table" id="juiceon-table">
+                <thead>
+                    <tr>
+                        <th width="80">상품번호</th>
+                        <th>상품명</th>
+                        <th width="100">카테고리</th>
+                        <th width="160">작업</th>
+                    </tr>
+                </thead>
+                <tbody id="juiceon-tbody"></tbody>
+            </table>
+        </div>
+        
+        <div id="kukdae" class="tab-content">
+            <h2>국대쥬스 상품 관리</h2>
+            <div class="stats">
+                <div class="stat-card">
+                    <h3 id="kukdae-count">0</h3>
+                    <p>전체 상품</p>
+                </div>
+                <div class="stat-card category-basic">
+                    <h3 id="kukdae-count-기타">0</h3>
+                    <p>기타</p>
+                </div>
+                <div class="stat-card category-disposable">
+                    <h3 id="kukdae-count-일회용">0</h3>
+                    <p>일회용</p>
+                </div>
+                <div class="stat-card category-liquid">
+                    <h3 id="kukdae-count-액상">0</h3>
+                    <p>액상</p>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="input-group">
+                    <label>상품번호</label>
+                    <input type="text" id="kukdae-product-no" placeholder="예: 452">
+                </div>
+                <div class="input-group">
+                    <label>상품명</label>
+                    <input type="text" id="kukdae-product-name" placeholder="예: 젤루좋아 입문 세트">
+                </div>
+                <div class="input-group">
+                    <label>카테고리</label>
+                    <select id="kukdae-category">
+                        <option value="기타">기타</option>
+                        <option value="일회용">일회용</option>
+                        <option value="액상">액상</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="addProduct('kukdae')">➕ 상품 추가</button>
+                <button class="btn btn-info" onclick="downloadProducts('kukdae')">📥 엑셀 다운로드</button>
+                <button class="btn btn-success" onclick="generateReviews('kukdae')">📝 리뷰 생성</button>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="kukdae-search" placeholder="🔍 상품 검색..." onkeyup="searchProducts('kukdae')">
+            </div>
+            
+            <div class="loading" id="kukdae-loading">⏳ 로딩 중...</div>
+            
+            <table class="products-table" id="kukdae-table">
+                <thead>
+                    <tr>
+                        <th width="80">상품번호</th>
+                        <th>상품명</th>
+                        <th width="100">카테고리</th>
+                        <th width="160">작업</th>
+                    </tr>
+                </thead>
+                <tbody id="kukdae-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- 수정 모달 -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✏️ 상품 수정</h2>
+            </div>
+            <div class="modal-body">
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label>상품번호</label>
+                    <input type="text" id="edit-product-no" placeholder="상품번호 입력">
+                </div>
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label>상품명</label>
+                    <input type="text" id="edit-product-name" placeholder="상품명 입력">
+                </div>
+                <div class="input-group">
+                    <label>카테고리</label>
+                    <select id="edit-category">
+                        <option value="기타">기타</option>
+                        <option value="일회용">일회용</option>
+                        <option value="액상">액상</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditModal()">취소</button>
+                <button class="btn btn-primary" onclick="saveEdit()">💾 저장</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = window.location.origin;
+        let currentChannel = 'vapingzone';
+        let allProducts = {
+            vapingzone: [],
+            juiceon: [],
+            kukdae: []
+        };
+        let editingProduct = null;
+        
+        // 탭 전환
+        function switchTab(channel) {
+            currentChannel = channel;
+            
+            // 모든 탭 비활성화
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // 선택된 탭 활성화
+            event.target.classList.add('active');
+            document.getElementById(channel).classList.add('active');
+            
+            // 상품 목록 로드
+            loadProducts(channel);
+        }
+        
+        // 알림 표시
+        function showAlert(message, type = 'success') {
+            const container = document.getElementById('alert-container');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            container.appendChild(alert);
+            
+            setTimeout(() => alert.remove(), 5000);
+        }
+        
+        // 상품 목록 로드
+        async function loadProducts(channel) {
+            const loading = document.getElementById(`${channel}-loading`);
+            const tbody = document.getElementById(`${channel}-tbody`);
+            
+            loading.classList.add('active');
+            
+            try {
+                const response = await fetch(`${API_URL}/api/products/${channel}`);
+                const products = await response.json();
+                
+                allProducts[channel] = products;
+                displayProducts(channel, products);
+                updateStats(channel, products);
+            } catch (error) {
+                showAlert('상품 목록 로드 실패: ' + error.message, 'error');
+                tbody.innerHTML = '<tr><td colspan="4" class="empty-state">상품을 불러올 수 없습니다</td></tr>';
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+        
+        // 상품 표시
+        function displayProducts(channel, products) {
+            const tbody = document.getElementById(`${channel}-tbody`);
+            
+            if (products.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="empty-state">상품이 없습니다</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = products.map(p => `
+                <tr>
+                    <td>${p.product_no}</td>
+                    <td>${p.product_name}</td>
+                    <td><span class="category-badge category-${p.category || '기타'}">${p.category || '기타'}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-warning" onclick="openEditModal('${channel}', '${p.product_no}', \`${p.product_name.replace(/`/g, '\\`')}\`, '${p.category || '기타'}')">✏️</button>
+                            <button class="btn btn-danger" onclick="deleteProduct('${channel}', '${p.product_no}')">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // 통계 업데이트
+        function updateStats(channel, products) {
+            document.getElementById(`${channel}-count`).textContent = products.length;
+            
+            const categoryCounts = {
+                '기타': 0,
+                '일회용': 0,
+                '액상': 0
+            };
+            
+            products.forEach(p => {
+                const cat = p.category || '기타';
+                if (categoryCounts[cat] !== undefined) {
+                    categoryCounts[cat]++;
+                }
+            });
+            
+            Object.keys(categoryCounts).forEach(cat => {
+                document.getElementById(`${channel}-count-${cat}`).textContent = categoryCounts[cat];
+            });
+        }
+        
+        // 상품 추가
+        async function addProduct(channel) {
+            const productNo = document.getElementById(`${channel}-product-no`).value.trim();
+            const productName = document.getElementById(`${channel}-product-name`).value.trim();
+            const category = document.getElementById(`${channel}-category`).value;
+            
+            if (!productNo || !productName) {
+                showAlert('상품번호와 상품명을 모두 입력하세요', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/api/products/${channel}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ product_no: productNo, product_name: productName, category: category })
+                });
+                
+                if (response.ok) {
+                    showAlert('✅ 상품이 추가되었습니다', 'success');
+                    document.getElementById(`${channel}-product-no`).value = '';
+                    document.getElementById(`${channel}-product-name`).value = '';
+                    document.getElementById(`${channel}-category`).value = '기타';
+                    loadProducts(channel);
+                } else {
+                    const error = await response.json();
+                    showAlert('❌ ' + error.error, 'error');
+                }
+            } catch (error) {
+                showAlert('❌ 상품 추가 실패: ' + error.message, 'error');
+            }
+        }
+        
+        // 수정 모달 열기
+        function openEditModal(channel, productNo, productName, category) {
+            editingProduct = { channel, oldProductNo: productNo };
+            document.getElementById('edit-product-no').value = productNo;
+            document.getElementById('edit-product-name').value = productName;
+            document.getElementById('edit-category').value = category || '기타';
+            document.getElementById('edit-modal').classList.add('active');
+        }
+        
+        // 수정 모달 닫기
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.remove('active');
+            editingProduct = null;
+        }
+        
+        // 상품 수정 저장
+        async function saveEdit() {
+            if (!editingProduct) return;
+            
+            const newProductNo = document.getElementById('edit-product-no').value.trim();
+            const newProductName = document.getElementById('edit-product-name').value.trim();
+            const newCategory = document.getElementById('edit-category').value;
+            
+            if (!newProductNo || !newProductName) {
+                showAlert('상품번호와 상품명을 모두 입력하세요', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/api/products/${editingProduct.channel}/${editingProduct.oldProductNo}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ product_no: newProductNo, product_name: newProductName, category: newCategory })
+                });
+                
+                if (response.ok) {
+                    showAlert('✅ 상품이 수정되었습니다', 'success');
+                    closeEditModal();
+                    loadProducts(editingProduct.channel);
+                } else {
+                    const error = await response.json();
+                    showAlert('❌ ' + error.error, 'error');
+                }
+            } catch (error) {
+                showAlert('❌ 상품 수정 실패: ' + error.message, 'error');
+            }
+        }
+        
+        // 상품 삭제
+        async function deleteProduct(channel, productNo) {
+            if (!confirm(`상품번호 ${productNo}를 삭제하시겠습니까?`)) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/api/products/${channel}/${productNo}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showAlert('✅ 상품이 삭제되었습니다', 'success');
+                    loadProducts(channel);
+                } else {
+                    const error = await response.json();
+                    showAlert('❌ ' + error.error, 'error');
+                }
+            } catch (error) {
+                showAlert('❌ 상품 삭제 실패: ' + error.message, 'error');
+            }
+        }
+        
+        // 상품 검색
+        function searchProducts(channel) {
+            const searchTerm = document.getElementById(`${channel}-search`).value.toLowerCase();
+            const filtered = allProducts[channel].filter(p => 
+                p.product_no.toLowerCase().includes(searchTerm) ||
+                p.product_name.toLowerCase().includes(searchTerm) ||
+                (p.category || '기타').toLowerCase().includes(searchTerm)
+            );
+            displayProducts(channel, filtered);
+        }
+        
+        // 엑셀 다운로드
+        function downloadProducts(channel) {
+            window.location.href = `${API_URL}/api/products/${channel}/download`;
+            showAlert('📥 엑셀 다운로드를 시작합니다', 'info');
+        }
+        
+        // 리뷰 생성
+        async function generateReviews(channel) {
+            const count = prompt('생성할 리뷰 개수를 입력하세요 (최대 100개)', '10');
+            if (!count) return;
+            
+            showAlert('📝 리뷰 생성 중...', 'info');
+            
+            try {
+                const response = await fetch(`${API_URL}/api/generate-reviews`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ channel: channel, count: parseInt(count) })
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `리뷰_${channel}_${Date.now()}.xlsx`;
+                    a.click();
+                    showAlert(`✅ ${count}개의 리뷰가 생성되었습니다`, 'success');
+                } else {
+                    showAlert('❌ 리뷰 생성 실패', 'error');
+                }
+            } catch (error) {
+                showAlert('❌ 리뷰 생성 실패: ' + error.message, 'error');
+            }
+        }
+        
+        // 모달 외부 클릭시 닫기
+        window.onclick = function(event) {
+            const modal = document.getElementById('edit-modal');
+            if (event.target === modal) {
+                closeEditModal();
+            }
+        }
+        
+        // 페이지 로드 시 초기 데이터 로드
+        window.onload = () => loadProducts('vapingzone');
+    </script>
+</body>
+</html>

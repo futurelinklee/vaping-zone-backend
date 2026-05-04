@@ -1,77 +1,38 @@
-# 베이핑존 리뷰 자동 생성기 - Backend API
+# 베이핑존 리뷰 자동 생성기 API v2.1
 
-Flask 기반 REST API 서버
+상품 관리 및 리뷰 자동 생성을 위한 백엔드 API
 
-## 기능
+## 🚀 주요 기능
 
-- 🛒 **베이핑존** (155개 상품)
-- 🧃 **쥬스온** (134개 상품)  
-- 🥤 **국대쥬스** (75개 상품)
+- ✅ 상품 추가/수정/삭제
+- ✅ 카테고리 관리 (기타/일회용/액상)
+- ✅ 리뷰 자동 생성 (40-50자 템플릿)
+- ✅ 엑셀 다운로드
+- ✅ Cloudflare Workers 연동 지원
 
-## API Endpoints
+## 📦 배포 방법
 
-### 1. 상품 로드
-```
-GET /api/load-products?channel={cafe24|juiceon|kukdae}
-```
+### Render 배포
 
-### 2. 리뷰 생성
-```
-POST /api/generate-reviews
-Content-Type: application/json
+1. GitHub 저장소 연결
+2. Build Command: `pip install -r requirements.txt`
+3. Start Command: `gunicorn app:app`
+4. 자동 배포
 
-{
-  "products": [...],
-  "count": 10,
-  "api_key": "sk-...",
-  "channel": "cafe24"
-}
-```
+### 환경 변수
 
-### 3. 엑셀 다운로드
-```
-GET /api/download-excel?channel={cafe24|juiceon|kukdae}
-```
+- `PORT`: 자동 설정 (Render)
 
-### 4. 헬스체크
-```
-GET /health
-```
+## 🔗 API 엔드포인트
 
-## 로컬 실행
+- `GET /api/products/<channel>` - 상품 목록
+- `POST /api/products/<channel>` - 상품 추가
+- `PUT /api/products/<channel>/<product_no>` - 상품 수정
+- `DELETE /api/products/<channel>/<product_no>` - 상품 삭제
+- `POST /api/generate-reviews` - 리뷰 생성
 
-```bash
-pip install -r requirements.txt
-python app.py
-```
+## 📱 채널
 
-서버가 `http://localhost:5000` 에서 실행됩니다.
-
-## 배포
-
-### Railway
-1. Railway 계정 생성
-2. GitHub 저장소 연결
-3. 자동 배포
-
-### Render
-1. Render 계정 생성
-2. New Web Service
-3. GitHub 저장소 연결
-4. Start Command: `python app.py`
-
-## 환경 변수
-
-- `PORT`: 서버 포트 (기본값: 5000)
-- `OPENAI_API_KEY`: OpenAI API 키 (선택사항, 클라이언트에서 전달 가능)
-
-## 기술 스택
-
-- Python 3.11+
-- Flask 3.0.0
-- OpenAI GPT-4o-mini
-- openpyxl (Excel 처리)
-
-## 라이센스
-
-MIT
+- `vapingzone` - 베이핑존
+- `juiceon` - 쥬스온
+- `kukdae` - 국대쥬스
