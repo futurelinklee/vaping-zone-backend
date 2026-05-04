@@ -12,9 +12,11 @@ from openai import OpenAI
 app = Flask(__name__)
 CORS(app)
 
-# API 키 설정 (환경 변수에서만 읽기 - 보안을 위해 기본값 없음)
-# Render 대시보드에서 환경 변수 API_KEY를 설정하세요
+# 앱 자체 인증 키 (프론트에서 입력하는 비밀번호)
 API_KEY = os.environ.get('API_KEY', '')
+
+# OpenAI API 키 (별도 환경변수로 분리)
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 
 # API 키 인증 데코레이터
 def require_api_key(f):
@@ -22,15 +24,12 @@ def require_api_key(f):
     def decorated_function(*args, **kwargs):
         auth_header = request.headers.get('Authorization')
         
-        # Authorization 헤더가 없으면 에러
         if not auth_header:
             return jsonify({'error': 'API 키가 필요합니다. Authorization 헤더를 포함해주세요.'}), 401
         
-        # Bearer 토큰 형식 확인
         if not auth_header.startswith('Bearer '):
             return jsonify({'error': '올바르지 않은 Authorization 형식입니다. "Bearer <API_KEY>" 형식을 사용하세요.'}), 401
         
-        # API 키 추출 및 검증
         provided_key = auth_header.replace('Bearer ', '').strip()
         if provided_key != API_KEY:
             return jsonify({'error': 'API 키가 올바르지 않습니다.'}), 403
@@ -40,27 +39,23 @@ def require_api_key(f):
 
 DATA_DIR = 'data'
 
-# 채널별 엑셀 파일 매핑
 CHANNEL_FILES = {
     'vapingzone': '베이핑존.xlsx',
     'juiceon': '쥬스온.xlsx',
     'kukdae': '국대쥬스.xlsx'
 }
 
-# 한글 이름 생성용 성씨와 이름
 KOREAN_SURNAMES = ['김', '이', '박', '최', '정', '강', '조', '윤', '장', '임', '한', '오', '서', '신', '권', '황', '안', '송', '류', '전']
 KOREAN_NAMES = ['민준', '서준', '예준', '도윤', '시우', '주원', '하준', '지호', '준서', '건우',
                 '서연', '서윤', '지우', '서현', '민서', '하은', '지민', '수아', '예은', '지유',
                 '현우', '민재', '시현', '태양', '승우', '유진', '은서', '채원', '다은', '수빈']
 
 def generate_korean_name():
-    """3글자 한글 이름 생성"""
     surname = random.choice(KOREAN_SURNAMES)
     name = random.choice(KOREAN_NAMES)
     return f"{surname}{name}"
 
 def load_products(channel):
-    """채널별 상품 데이터 로드 (openpyxl 사용)"""
     if channel not in CHANNEL_FILES:
         return []
     
@@ -73,21 +68,18 @@ def load_products(channel):
         ws = wb.active
         products = []
         
-        # 헤더 행 찾기
         headers = {}
         for idx, cell in enumerate(ws[1], 1):
             if cell.value:
                 headers[cell.value] = idx
         
-        # 데이터 행 읽기
         for row in ws.iter_rows(min_row=2, values_only=False):
-            if row[0].value is None:  # 빈 행 스킵
+            if row[0].value is None:
                 continue
             
             product_no = str(row[headers.get('상품번호', 1) - 1].value or '')
             product_name = str(row[headers.get('상품명', 2) - 1].value or '')
             
-            # 카테고리 필드가 있으면 사용, 없으면 자동 감지
             if '카테고리' in headers:
                 category = str(row[headers['카테고리'] - 1].value or '기타')
             else:
@@ -106,7 +98,6 @@ def load_products(channel):
         return []
 
 def save_products(channel, products):
-    """채널별 상품 데이터 저장 (openpyxl 사용)"""
     if channel not in CHANNEL_FILES:
         return False
     
@@ -117,17 +108,14 @@ def save_products(channel, products):
         ws = wb.active
         ws.title = "상품목록"
         
-        # 헤더 작성
         headers = ['상품번호', '상품명', '카테고리']
         ws.append(headers)
         
-        # 헤더 스타일 적용
         for cell in ws[1]:
             cell.font = Font(bold=True)
             cell.fill = PatternFill(start_color='CCE5FF', end_color='CCE5FF', fill_type='solid')
             cell.alignment = Alignment(horizontal='center')
         
-        # 데이터 작성
         for p in products:
             ws.append([
                 p['product_no'],
@@ -135,7 +123,6 @@ def save_products(channel, products):
                 p.get('category', '기타')
             ])
         
-        # 열 너비 조정
         ws.column_dimensions['A'].width = 12
         ws.column_dimensions['B'].width = 50
         ws.column_dimensions['C'].width = 12
@@ -169,19 +156,15 @@ def index():
 def health():
     return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()})
 
-# ===== 상품 관리 API =====
-
 @app.route('/api/products/<channel>', methods=['GET'])
 @require_api_key
 def get_products(channel):
-    """상품 목록 조회"""
     products = load_products(channel)
     return jsonify(products)
 
 @app.route('/api/products/<channel>', methods=['POST'])
 @require_api_key
 def add_product(channel):
-    """상품 추가 (중복 체크)"""
     data = request.get_json()
     product_no = str(data.get('product_no', '')).strip()
     product_name = str(data.get('product_name', '')).strip()
@@ -192,13 +175,11 @@ def add_product(channel):
     
     products = load_products(channel)
     
-    # 중복 체크
     if any(p['product_no'] == product_no for p in products):
         return jsonify({'error': f'상품번호 {product_no}는 이미 존재합니다'}), 409
     
-    # 새 상품 추가
     new_product = {
-        'product_no': product_no, 
+        'product_no': product_no,
         'product_name': product_name,
         'category': category
     }
@@ -212,7 +193,6 @@ def add_product(channel):
 @app.route('/api/products/<channel>/<product_no>', methods=['PUT'])
 @require_api_key
 def update_product(channel, product_no):
-    """상품 수정"""
     data = request.get_json()
     new_product_no = str(data.get('product_no', '')).strip()
     new_product_name = str(data.get('product_name', '')).strip()
@@ -223,18 +203,15 @@ def update_product(channel, product_no):
     
     products = load_products(channel)
     
-    # 기존 상품 찾기
     product_found = False
     for i, p in enumerate(products):
         if p['product_no'] == product_no:
-            # 상품번호를 변경하는 경우 중복 체크
             if new_product_no != product_no:
                 if any(p['product_no'] == new_product_no for p in products):
                     return jsonify({'error': f'상품번호 {new_product_no}는 이미 존재합니다'}), 409
             
-            # 상품 정보 업데이트
             updated_product = {
-                'product_no': new_product_no, 
+                'product_no': new_product_no,
                 'product_name': new_product_name,
                 'category': new_category
             }
@@ -246,20 +223,15 @@ def update_product(channel, product_no):
         return jsonify({'error': f'상품번호 {product_no}를 찾을 수 없습니다'}), 404
     
     if save_products(channel, products):
-        return jsonify({
-            'message': '상품이 수정되었습니다',
-            'product': updated_product
-        }), 200
+        return jsonify({'message': '상품이 수정되었습니다', 'product': updated_product}), 200
     else:
         return jsonify({'error': '상품 저장 실패'}), 500
 
 @app.route('/api/products/<channel>/<product_no>', methods=['DELETE'])
 @require_api_key
 def delete_product(channel, product_no):
-    """상품 삭제"""
     products = load_products(channel)
     
-    # 삭제할 상품 찾기
     original_count = len(products)
     products = [p for p in products if p['product_no'] != product_no]
     
@@ -274,7 +246,6 @@ def delete_product(channel, product_no):
 @app.route('/api/products/<channel>/download', methods=['GET'])
 @require_api_key
 def download_products(channel):
-    """상품 엑셀 다운로드"""
     if channel not in CHANNEL_FILES:
         return jsonify({'error': '잘못된 채널입니다'}), 400
     
@@ -296,7 +267,6 @@ def download_products(channel):
 
 # ===== 리뷰 생성 API =====
 
-# 리뷰 템플릿 (40-50자)
 REVIEW_TEMPLATES = {
     '액상': [
         "{flavor} 맛이 정말 진하고 좋아요. 목넘김도 부드럽고 만족스러워요.",
@@ -322,7 +292,6 @@ REVIEW_TEMPLATES = {
 }
 
 def detect_category(product_name):
-    """상품명으로 카테고리 자동 감지"""
     if any(keyword in product_name for keyword in ['액상', '니코틴', 'ml', 'ML']):
         return '액상'
     elif any(keyword in product_name for keyword in ['일회용', 'PUFF', 'puff', '퍼프']):
@@ -331,8 +300,7 @@ def detect_category(product_name):
         return '기타'
 
 def extract_flavor(product_name):
-    """상품명에서 맛/향 추출"""
-    flavors = ['딸기', '수박', '청포도', '복숭아', '민트', '망고', '블루베리', '자몽', 
+    flavors = ['딸기', '수박', '청포도', '복숭아', '민트', '망고', '블루베리', '자몽',
                '레몬', '체리', '사과', '포도', '바닐라', '커피', '코코넛']
     for flavor in flavors:
         if flavor in product_name:
@@ -342,8 +310,8 @@ def extract_flavor(product_name):
 def generate_ai_review_content(product_name, category):
     """OpenAI API를 사용해서 리뷰 내용 생성 (40-60자)"""
     try:
-        client = OpenAI(api_key=API_KEY)
-        
+        client = OpenAI(api_key=OPENAI_API_KEY)  # ← 수정됨
+
         prompt = f"""당신은 전자담배를 실제로 구매해서 사용하고 있는 일반 소비자입니다.
 방금 사용한 이 상품에 대해 쇼핑몰 리뷰를 작성하려고 합니다.
 
@@ -376,11 +344,10 @@ def generate_ai_review_content(product_name, category):
             temperature=1.0,
             max_tokens=200
         )
-        
+
         return response.choices[0].message.content.strip()
     except Exception as e:
         print(f"OpenAI API 오류: {e}")
-        # 오류 시 템플릿 사용
         flavor = extract_flavor(product_name)
         template = random.choice(REVIEW_TEMPLATES.get(category, REVIEW_TEMPLATES['일회용']))
         return template.format(flavor=flavor)
@@ -388,8 +355,8 @@ def generate_ai_review_content(product_name, category):
 def generate_ai_review_title(product_name, category):
     """OpenAI API를 사용해서 리뷰 제목 생성 (15-25자)"""
     try:
-        client = OpenAI(api_key=API_KEY)
-        
+        client = OpenAI(api_key=OPENAI_API_KEY)  # ← 수정됨
+
         prompt = f"""당신은 쇼핑몰에 리뷰를 작성하는 일반 소비자입니다.
 방금 사용한 이 상품에 대한 리뷰 제목을 작성하려고 합니다.
 
@@ -417,36 +384,32 @@ def generate_ai_review_title(product_name, category):
             temperature=1.0,
             max_tokens=100
         )
-        
+
         return response.choices[0].message.content.strip()
     except Exception as e:
         print(f"OpenAI API 오류: {e}")
-        # 오류 시 간단한 제목 생성
         return f"만족스러운 {category} 제품"
 
 def generate_kukdae_reviews(products, count):
-    """국대쥬스 전용 리뷰 생성 (onreple 양식) - OpenAI API 사용 (제목 없음)"""
+    """국대쥬스 전용 리뷰 생성 (onreple 양식)"""
     reviews = []
     now = datetime.now()
-    
+
     for i in range(count):
         product = random.choice(products)
         category = detect_category(product['product_name'])
-        
-        # OpenAI API로 리뷰 내용만 생성 (제목 없음)
+
         review_text = generate_ai_review_content(product['product_name'], category)
-        
-        # 날짜: 어제~3일 전 (ISO 8601 형식)
+
         days_ago = random.randint(1, 3)
         review_date = now - timedelta(days=days_ago)
-        
-        # 작성자 정보 생성
+
         writer_name = generate_korean_name()
         writer_id = f"user_{random.randint(1000, 9999)}"
-        
+
         reviews.append({
             'contents': review_text,
-            'goodsPt': 100,  # 별점 무조건 100점
+            'goodsPt': 100,
             'images_1': '',
             'images_2': '',
             'images_3': '',
@@ -460,27 +423,23 @@ def generate_kukdae_reviews(products, count):
             'writerId': writer_id,
             'writerName': writer_name
         })
-    
-    # 엑셀 생성 (국대쥬스 양식)
+
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = 'onreple_review_sample'
-    
-    # 헤더 작성 (국대쥬스 양식)
+
     headers = [
-        'contents', 'goodsPt', 'images_1', 'images_2', 'images_3', 
+        'contents', 'goodsPt', 'images_1', 'images_2', 'images_3',
         'images_4', 'images_5', 'orderProductName', 'platformProductId',
         'platformUserId', 'deliveryPt', 'writerAt', 'writerId', 'writerName'
     ]
     ws.append(headers)
-    
-    # 헤더 스타일 적용
+
     for cell in ws[1]:
         cell.font = Font(bold=True)
         cell.fill = PatternFill(start_color='CCE5FF', end_color='CCE5FF', fill_type='solid')
         cell.alignment = Alignment(horizontal='center')
-    
-    # 데이터 작성
+
     for review in reviews:
         ws.append([
             review['contents'],
@@ -498,23 +457,21 @@ def generate_kukdae_reviews(products, count):
             review['writerId'],
             review['writerName']
         ])
-    
-    # 열 너비 조정
-    ws.column_dimensions['A'].width = 50  # contents
-    ws.column_dimensions['B'].width = 10  # goodsPt
-    ws.column_dimensions['H'].width = 40  # orderProductName
-    ws.column_dimensions['I'].width = 15  # platformProductId
-    ws.column_dimensions['J'].width = 15  # platformUserId
-    ws.column_dimensions['L'].width = 20  # writerAt
-    ws.column_dimensions['M'].width = 15  # writerId
-    ws.column_dimensions['N'].width = 12  # writerName
-    
-    # 메모리에 저장
+
+    ws.column_dimensions['A'].width = 50
+    ws.column_dimensions['B'].width = 10
+    ws.column_dimensions['H'].width = 40
+    ws.column_dimensions['I'].width = 15
+    ws.column_dimensions['J'].width = 15
+    ws.column_dimensions['L'].width = 20
+    ws.column_dimensions['M'].width = 15
+    ws.column_dimensions['N'].width = 12
+
     output = io.BytesIO()
     wb.save(output)
     wb.close()
     output.seek(0)
-    
+
     return send_file(
         output,
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -525,42 +482,36 @@ def generate_kukdae_reviews(products, count):
 @app.route('/api/generate-reviews', methods=['POST'])
 @require_api_key
 def generate_reviews():
-    """리뷰 생성 (openpyxl 사용)"""
     data = request.get_json()
     channel = data.get('channel', 'vapingzone')
     count = min(int(data.get('count', 10)), 100)
     product_numbers = data.get('product_numbers', [])
-    
+
     products = load_products(channel)
     if not products:
         return jsonify({'error': '상품 데이터가 없습니다'}), 400
-    
-    # 선택된 상품번호가 있으면 필터링
+
     if product_numbers:
         products = [p for p in products if p['product_no'] in product_numbers]
         if not products:
             return jsonify({'error': '선택한 상품이 존재하지 않습니다'}), 400
-    
-    # 국대쥬스는 별도 양식 사용
+
     if channel == 'kukdae':
         return generate_kukdae_reviews(products, count)
-    
-    # 베이핑존, 쥬스온 기본 양식 - OpenAI API 사용 (제목과 내용 각각 생성)
+
     reviews = []
     now = datetime.now()
-    
+
     for i in range(count):
         product = random.choice(products)
         category = detect_category(product['product_name'])
-        
-        # OpenAI API로 제목과 내용을 각각 별도로 생성
+
         review_title = generate_ai_review_title(product['product_name'], category)
         review_content = generate_ai_review_content(product['product_name'], category)
-        
-        # 날짜: 어제~3일 전
+
         days_ago = random.randint(1, 3)
         review_date = now - timedelta(days=days_ago)
-        
+
         reviews.append({
             '작성자': generate_korean_name(),
             '제목': review_title,
@@ -570,23 +521,19 @@ def generate_reviews():
             '상품번호': product['product_no'],
             '상품명': product['product_name']
         })
-    
-    # 엑셀 생성 (openpyxl 사용)
+
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = '리뷰'
-    
-    # 헤더 작성
+
     headers = ['작성자', '제목', '내용', '평점', '작성일', '상품번호', '상품명']
     ws.append(headers)
-    
-    # 헤더 스타일 적용
+
     for cell in ws[1]:
         cell.font = Font(bold=True)
         cell.fill = PatternFill(start_color='CCE5FF', end_color='CCE5FF', fill_type='solid')
         cell.alignment = Alignment(horizontal='center')
-    
-    # 데이터 작성
+
     for review in reviews:
         ws.append([
             review['작성자'],
@@ -597,8 +544,7 @@ def generate_reviews():
             review['상품번호'],
             review['상품명']
         ])
-    
-    # 열 너비 조정
+
     ws.column_dimensions['A'].width = 12
     ws.column_dimensions['B'].width = 35
     ws.column_dimensions['C'].width = 50
@@ -606,19 +552,18 @@ def generate_reviews():
     ws.column_dimensions['E'].width = 20
     ws.column_dimensions['F'].width = 12
     ws.column_dimensions['G'].width = 40
-    
-    # 메모리에 저장
+
     output = io.BytesIO()
     wb.save(output)
     wb.close()
     output.seek(0)
-    
+
     channel_names = {
         'vapingzone': '베이핑존',
         'juiceon': '쥬스온',
         'kukdae': '국대쥬스'
     }
-    
+
     return send_file(
         output,
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
