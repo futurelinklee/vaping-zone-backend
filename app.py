@@ -310,10 +310,17 @@ def generate_reviews():
     data = request.get_json()
     channel = data.get('channel', 'vapingzone')
     count = min(int(data.get('count', 10)), 100)
+    product_numbers = data.get('product_numbers', [])
     
     products = load_products(channel)
     if not products:
         return jsonify({'error': '상품 데이터가 없습니다'}), 400
+    
+    # 선택된 상품번호가 있으면 필터링
+    if product_numbers:
+        products = [p for p in products if p['product_no'] in product_numbers]
+        if not products:
+            return jsonify({'error': '선택한 상품이 존재하지 않습니다'}), 400
     
     reviews = []
     now = datetime.now()
