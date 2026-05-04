@@ -473,13 +473,13 @@
             <p>상품 추가, 수정, 삭제 및 리뷰 생성을 간편하게 관리하세요</p>
             
             <div class="api-config">
-                <h3>🔑 API 서버 설정</h3>
+                <h3>🔑 API 키 설정</h3>
                 <div class="api-input-group">
-                    <input type="text" id="api-url-input" placeholder="API 서버 URL 입력 (예: https://vaping-zone-backend.onrender.com)" value="">
-                    <button class="btn btn-primary" onclick="saveAndTestAPI()">💾 저장 및 검증</button>
-                    <span class="api-status disconnected" id="api-status">⚠️ 미연결</span>
+                    <input type="password" id="api-key-input" placeholder="API 키를 입력하세요 (예: sk-xxxxxxxxxxxxx)" value="">
+                    <button class="btn btn-primary" onclick="saveAndTestAPIKey()">💾 저장 및 검증</button>
+                    <span class="api-status disconnected" id="api-status">⚠️ 미설정</span>
                 </div>
-                <small style="color: #666;">💡 API 서버 URL을 입력하고 저장하면 자동으로 연결 상태를 확인합니다</small>
+                <small style="color: #666;">💡 API 키를 입력하고 저장하면 자동으로 인증 및 연결을 확인합니다</small>
             </div>
         </div>
         
@@ -734,7 +734,8 @@
     </div>
     
     <script>
-        let API_URL = window.location.origin;
+        const API_URL = window.location.origin;
+        let API_KEY = '';
         let currentChannel = 'vapingzone';
         let allProducts = {
             vapingzone: [],
@@ -780,7 +781,9 @@
             loading.classList.add('active');
             
             try {
-                const response = await fetch(`${API_URL}/api/products/${channel}`);
+                const response = await fetch(`${API_URL}/api/products/${channel}`, {
+                    headers: getAuthHeaders()
+                });
                 const products = await response.json();
                 
                 allProducts[channel] = products;
@@ -911,7 +914,7 @@
             try {
                 const response = await fetch(`${API_URL}/api/products/${channel}`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify({ product_no: productNo, product_name: productName, category: category })
                 });
                 
@@ -961,7 +964,7 @@
             try {
                 const response = await fetch(`${API_URL}/api/products/${editingProduct.channel}/${editingProduct.oldProductNo}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify({ product_no: newProductNo, product_name: newProductName, category: newCategory })
                 });
                 
@@ -984,7 +987,8 @@
             
             try {
                 const response = await fetch(`${API_URL}/api/products/${channel}/${productNo}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
                 });
                 
                 if (response.ok) {
@@ -1034,7 +1038,7 @@
             try {
                 const response = await fetch(`${API_URL}/api/generate-reviews`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify({ 
                         channel: channel, 
                         count: parseInt(count),
@@ -1066,68 +1070,63 @@
             }
         }
         
-        // API URL 저장 및 검증
-        async function saveAndTestAPI() {
-            const input = document.getElementById('api-url-input');
+        // API 키 저장 및 검증
+        async function saveAndTestAPIKey() {
+            const input = document.getElementById('api-key-input');
             const statusEl = document.getElementById('api-status');
-            let apiUrl = input.value.trim();
+            const apiKey = input.value.trim();
             
-            if (!apiUrl) {
-                showAlert('❌ API URL을 입력하세요', 'error');
+            if (!apiKey) {
+                showAlert('❌ API 키를 입력하세요', 'error');
                 return;
             }
-            
-            // http:// 또는 https:// 자동 추가
-            if (!apiUrl.startsWith('http://') && !apiUrl.startsWith('https://')) {
-                apiUrl = 'https://' + apiUrl;
-                input.value = apiUrl;
-            }
-            
-            // 마지막 슬래시 제거
-            apiUrl = apiUrl.replace(/\/$/, '');
-            input.value = apiUrl;
             
             // 검증 중 표시
             statusEl.className = 'api-status checking';
             statusEl.innerHTML = '🔄 검증 중...';
             
             try {
-                // Health check 엔드포인트 호출
-                const response = await fetch(`${apiUrl}/health`, {
+                // API 키 포함하여 Health check 호출
+                const response = await fetch(`${API_URL}/health`, {
                     method: 'GET',
-                    headers: { 'Content-Type': 'application/json' }
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    }
                 });
                 
                 if (response.ok) {
                     const data = await response.json();
                     
-                    // API URL 저장
-                    API_URL = apiUrl;
-                    localStorage.setItem('vaping_api_url', apiUrl);
+                    // API 키 저장 (localStorage에 안전하게 보관)
+                    API_KEY = apiKey;
+                    localStorage.setItem('vaping_api_key', apiKey);
                     
                     // 성공 표시
                     statusEl.className = 'api-status connected';
-                    statusEl.innerHTML = '✅ 연결됨';
-                    showAlert(`✅ API 서버 연결 성공!\n서비스: ${data.service || 'Unknown'}\n버전: ${data.version || 'Unknown'}`, 'success');
+                    statusEl.innerHTML = '✅ 인증됨';
+                    showAlert(`✅ API 키 인증 성공!\n서비스: ${data.service || '베이핑존 리뷰 시스템'}\n상태: 정상`, 'success');
                     
                     // 현재 탭 데이터 새로고침
                     loadProducts(currentChannel);
+                } else if (response.status === 401 || response.status === 403) {
+                    throw new Error('인증 실패 - API 키가 올바르지 않습니다');
                 } else {
                     throw new Error(`HTTP ${response.status}`);
                 }
             } catch (error) {
                 statusEl.className = 'api-status disconnected';
-                statusEl.innerHTML = '❌ 연결 실패';
-                showAlert(`❌ API 서버 연결 실패: ${error.message}\n\nURL을 확인하고 다시 시도하세요`, 'error');
+                statusEl.innerHTML = '❌ 인증 실패';
+                showAlert(`❌ API 키 인증 실패: ${error.message}\n\nAPI 키를 확인하고 다시 시도하세요`, 'error');
             }
         }
         
-        // 저장된 API URL 불러오기
-        function loadSavedAPIUrl() {
-            const saved = localStorage.getItem('vaping_api_url');
+        // 저장된 API 키 불러오기
+        function loadSavedAPIKey() {
+            const saved = localStorage.getItem('vaping_api_key');
             if (saved) {
-                document.getElementById('api-url-input').value = saved;
-                API_URL = saved;
+                document.getElementById('api-key-input').value = saved;
+                API_KEY = saved;
                 
                 // 자동 검증
                 checkAPIConnection();
@@ -1138,27 +1137,45 @@
         async function checkAPIConnection() {
             const statusEl = document.getElementById('api-status');
             
+            if (!API_KEY) {
+                statusEl.className = 'api-status disconnected';
+                statusEl.innerHTML = '⚠️ 미설정';
+                return;
+            }
+            
             try {
                 const response = await fetch(`${API_URL}/health`, {
                     method: 'GET',
-                    headers: { 'Content-Type': 'application/json' }
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_KEY}`
+                    }
                 });
                 
                 if (response.ok) {
                     statusEl.className = 'api-status connected';
-                    statusEl.innerHTML = '✅ 연결됨';
+                    statusEl.innerHTML = '✅ 인증됨';
                 } else {
-                    throw new Error('Connection failed');
+                    throw new Error('Authentication failed');
                 }
             } catch (error) {
                 statusEl.className = 'api-status disconnected';
-                statusEl.innerHTML = '⚠️ 미연결';
+                statusEl.innerHTML = '⚠️ 미설정';
             }
+        }
+        
+        // 모든 API 요청에 Authorization 헤더 추가하는 헬퍼 함수
+        function getAuthHeaders() {
+            const headers = { 'Content-Type': 'application/json' };
+            if (API_KEY) {
+                headers['Authorization'] = `Bearer ${API_KEY}`;
+            }
+            return headers;
         }
         
         // 페이지 로드 시 초기 데이터 로드
         window.onload = () => {
-            loadSavedAPIUrl();
+            loadSavedAPIKey();
             loadProducts('vapingzone');
         };
     </script>

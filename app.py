@@ -6,9 +6,35 @@ import random
 import io
 import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill
+from functools import wraps
 
 app = Flask(__name__)
 CORS(app)
+
+# API 키 설정 (환경 변수에서 읽거나 기본값 사용)
+API_KEY = os.environ.get('API_KEY', 'vaping-zone-2024-secret-key')
+
+# API 키 인증 데코레이터
+def require_api_key(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        auth_header = request.headers.get('Authorization')
+        
+        # Authorization 헤더가 없으면 에러
+        if not auth_header:
+            return jsonify({'error': 'API 키가 필요합니다. Authorization 헤더를 포함해주세요.'}), 401
+        
+        # Bearer 토큰 형식 확인
+        if not auth_header.startswith('Bearer '):
+            return jsonify({'error': '올바르지 않은 Authorization 형식입니다. "Bearer <API_KEY>" 형식을 사용하세요.'}), 401
+        
+        # API 키 추출 및 검증
+        provided_key = auth_header.replace('Bearer ', '').strip()
+        if provided_key != API_KEY:
+            return jsonify({'error': 'API 키가 올바르지 않습니다.'}), 403
+        
+        return f(*args, **kwargs)
+    return decorated_function
 
 DATA_DIR = 'data'
 
@@ -124,14 +150,15 @@ def index():
     return jsonify({
         'service': '베이핑존 리뷰 자동 생성기 API v2.0',
         'version': '2.0.0',
+        'authentication': 'Bearer Token Required',
         'endpoints': [
-            'GET /api/products/<channel> - 상품 목록 조회',
-            'POST /api/products/<channel> - 상품 추가',
-            'PUT /api/products/<channel>/<product_no> - 상품 수정',
-            'DELETE /api/products/<channel>/<product_no> - 상품 삭제',
-            'GET /api/products/<channel>/download - 상품 엑셀 다운로드',
-            'POST /api/generate-reviews - 리뷰 생성',
-            'GET /health - 헬스 체크'
+            'GET /api/products/<channel> - 상품 목록 조회 (인증 필요)',
+            'POST /api/products/<channel> - 상품 추가 (인증 필요)',
+            'PUT /api/products/<channel>/<product_no> - 상품 수정 (인증 필요)',
+            'DELETE /api/products/<channel>/<product_no> - 상품 삭제 (인증 필요)',
+            'GET /api/products/<channel>/download - 상품 엑셀 다운로드 (인증 필요)',
+            'POST /api/generate-reviews - 리뷰 생성 (인증 필요)',
+            'GET /health - 헬스 체크 (인증 불필요)'
         ]
     })
 
@@ -142,12 +169,14 @@ def health():
 # ===== 상품 관리 API =====
 
 @app.route('/api/products/<channel>', methods=['GET'])
+@require_api_key
 def get_products(channel):
     """상품 목록 조회"""
     products = load_products(channel)
     return jsonify(products)
 
 @app.route('/api/products/<channel>', methods=['POST'])
+@require_api_key
 def add_product(channel):
     """상품 추가 (중복 체크)"""
     data = request.get_json()
@@ -178,6 +207,7 @@ def add_product(channel):
         return jsonify({'error': '상품 저장 실패'}), 500
 
 @app.route('/api/products/<channel>/<product_no>', methods=['PUT'])
+@require_api_key
 def update_product(channel, product_no):
     """상품 수정"""
     data = request.get_json()
@@ -221,6 +251,7 @@ def update_product(channel, product_no):
         return jsonify({'error': '상품 저장 실패'}), 500
 
 @app.route('/api/products/<channel>/<product_no>', methods=['DELETE'])
+@require_api_key
 def delete_product(channel, product_no):
     """상품 삭제"""
     products = load_products(channel)
@@ -238,6 +269,7 @@ def delete_product(channel, product_no):
         return jsonify({'error': '상품 삭제 실패'}), 500
 
 @app.route('/api/products/<channel>/download', methods=['GET'])
+@require_api_key
 def download_products(channel):
     """상품 엑셀 다운로드"""
     if channel not in CHANNEL_FILES:
@@ -304,7 +336,108 @@ def extract_flavor(product_name):
             return flavor
     return '이'
 
+def generate_kukdae_reviews(products, count):
+    """국대쥬스 전용 리뷰 생성 (onreple 양식)"""
+    reviews = []
+    now = datetime.now()
+    
+    for i in range(count):
+        product = random.choice(products)
+        category = detect_category(product['product_name'])
+        flavor = extract_flavor(product['product_name'])
+        
+        # 템플릿 선택 및 치환
+        template = random.choice(REVIEW_TEMPLATES[category])
+        review_text = template.format(flavor=flavor)
+        
+        # 날짜: 어제~3일 전 (ISO 8601 형식)
+        days_ago = random.randint(1, 3)
+        review_date = now - timedelta(days=days_ago)
+        
+        # 작성자 정보 생성
+        writer_name = generate_korean_name()
+        writer_id = f"user_{random.randint(1000, 9999)}"
+        
+        reviews.append({
+            'contents': review_text,
+            'goodsPt': 100,  # 별점 무조건 100점
+            'images_1': '',
+            'images_2': '',
+            'images_3': '',
+            'images_4': '',
+            'images_5': '',
+            'orderProductName': product['product_name'],
+            'platformProductId': product['product_no'],
+            'platformUserId': writer_id,
+            'deliveryPt': '',
+            'writerAt': review_date.strftime('%Y-%m-%dT%H:%M:%S'),
+            'writerId': writer_id,
+            'writerName': writer_name
+        })
+    
+    # 엑셀 생성 (국대쥬스 양식)
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'onreple_review_sample'
+    
+    # 헤더 작성 (국대쥬스 양식)
+    headers = [
+        'contents', 'goodsPt', 'images_1', 'images_2', 'images_3', 
+        'images_4', 'images_5', 'orderProductName', 'platformProductId',
+        'platformUserId', 'deliveryPt', 'writerAt', 'writerId', 'writerName'
+    ]
+    ws.append(headers)
+    
+    # 헤더 스타일 적용
+    for cell in ws[1]:
+        cell.font = Font(bold=True)
+        cell.fill = PatternFill(start_color='CCE5FF', end_color='CCE5FF', fill_type='solid')
+        cell.alignment = Alignment(horizontal='center')
+    
+    # 데이터 작성
+    for review in reviews:
+        ws.append([
+            review['contents'],
+            review['goodsPt'],
+            review['images_1'],
+            review['images_2'],
+            review['images_3'],
+            review['images_4'],
+            review['images_5'],
+            review['orderProductName'],
+            review['platformProductId'],
+            review['platformUserId'],
+            review['deliveryPt'],
+            review['writerAt'],
+            review['writerId'],
+            review['writerName']
+        ])
+    
+    # 열 너비 조정
+    ws.column_dimensions['A'].width = 50  # contents
+    ws.column_dimensions['B'].width = 10  # goodsPt
+    ws.column_dimensions['H'].width = 40  # orderProductName
+    ws.column_dimensions['I'].width = 15  # platformProductId
+    ws.column_dimensions['J'].width = 15  # platformUserId
+    ws.column_dimensions['L'].width = 20  # writerAt
+    ws.column_dimensions['M'].width = 15  # writerId
+    ws.column_dimensions['N'].width = 12  # writerName
+    
+    # 메모리에 저장
+    output = io.BytesIO()
+    wb.save(output)
+    wb.close()
+    output.seek(0)
+    
+    return send_file(
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name=f"국대쥬스_리뷰_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    )
+
 @app.route('/api/generate-reviews', methods=['POST'])
+@require_api_key
 def generate_reviews():
     """리뷰 생성 (openpyxl 사용)"""
     data = request.get_json()
@@ -322,6 +455,11 @@ def generate_reviews():
         if not products:
             return jsonify({'error': '선택한 상품이 존재하지 않습니다'}), 400
     
+    # 국대쥬스는 별도 양식 사용
+    if channel == 'kukdae':
+        return generate_kukdae_reviews(products, count)
+    
+    # 베이핑존, 쥬스온 기본 양식
     reviews = []
     now = datetime.now()
     
