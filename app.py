@@ -163,6 +163,7 @@ def index():
     })
 
 @app.route('/health')
+@require_api_key
 def health():
     return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()})
 
