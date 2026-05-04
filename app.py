@@ -11,8 +11,9 @@ from functools import wraps
 app = Flask(__name__)
 CORS(app)
 
-# API 키 설정 (환경 변수에서 읽거나 기본값 사용)
-API_KEY = os.environ.get('API_KEY', 'vaping-zone-2024-secret-key')
+# API 키 설정 (환경 변수에서만 읽기 - 보안을 위해 기본값 없음)
+# Render 대시보드에서 환경 변수 API_KEY를 설정하세요
+API_KEY = os.environ.get('API_KEY', '')
 
 # API 키 인증 데코레이터
 def require_api_key(f):
