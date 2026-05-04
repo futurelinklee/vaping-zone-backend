@@ -7,6 +7,7 @@ import io
 import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill
 from functools import wraps
+from openai import OpenAI
 
 app = Flask(__name__)
 CORS(app)
@@ -338,19 +339,102 @@ def extract_flavor(product_name):
             return flavor
     return '이'
 
+def generate_ai_review_content(product_name, category):
+    """OpenAI API를 사용해서 리뷰 내용 생성 (40-60자)"""
+    try:
+        client = OpenAI(api_key=API_KEY)
+        
+        prompt = f"""당신은 전자담배를 실제로 구매해서 사용하고 있는 일반 소비자입니다.
+방금 사용한 이 상품에 대해 쇼핑몰 리뷰를 작성하려고 합니다.
+
+상품명: {product_name}
+카테고리: {category}
+
+다음과 같이 자연스럽고 솔직한 리뷰를 40-60자로 작성해주세요:
+
+스타일 예시:
+- "생각보다 괜찮네요", "진짜 좋아요", "완전 만족", "이거 진짜 ㅋㅋ" 같은 자연스러운 표현 사용
+- 맞춤법이 완벽하지 않아도 됨 (예: "ㅋㅋ", "ㄹㅇ", "굿" 등)
+- 구어체 사용 가능 (예: "~요", "~네요", "~ㅋㅋ")
+- 문장이 짧고 간결해도 됨
+- 약간의 오타나 띄어쓰기 실수도 자연스러움
+
+내용:
+- 실제 사용 경험이나 느낌
+- 맛, 연무량, 디자인, 휴대성, 배터리 등 구체적 요소 언급
+- 긍정적이지만 과하지 않게
+- 40-60자 분량
+
+이모티콘 사용하지 말고, 진짜 사람이 급하게 쓴 것처럼 작성해주세요."""
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "당신은 전자담배를 사용하는 20-30대 일반 소비자입니다. 쇼핑몰 리뷰를 작성할 때 자연스럽고 솔직하게, 때로는 구어체나 ㅋㅋ 같은 표현을 섞어서 씁니다."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=1.0,
+            max_tokens=200
+        )
+        
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"OpenAI API 오류: {e}")
+        # 오류 시 템플릿 사용
+        flavor = extract_flavor(product_name)
+        template = random.choice(REVIEW_TEMPLATES.get(category, REVIEW_TEMPLATES['일회용']))
+        return template.format(flavor=flavor)
+
+def generate_ai_review_title(product_name, category):
+    """OpenAI API를 사용해서 리뷰 제목 생성 (15-25자)"""
+    try:
+        client = OpenAI(api_key=API_KEY)
+        
+        prompt = f"""당신은 쇼핑몰에 리뷰를 작성하는 일반 소비자입니다.
+방금 사용한 이 상품에 대한 리뷰 제목을 작성하려고 합니다.
+
+상품명: {product_name}
+카테고리: {category}
+
+자연스럽고 솔직한 제목을 15-25자로 작성해주세요:
+
+스타일 예시:
+- "진짜 만족", "굿굿", "추천할만함", "생각보다 좋네요"
+- "ㅋㅋ 이거 대박", "역시 믿고 삼", "개꿀템 발견"
+- 구어체 자유롭게 (예: "~요", "~네요", "~ㅋㅋ")
+- 완벽한 문장 아니어도 됨
+- 짧고 간결하게
+
+사람들이 급하게 쓰는 쇼핑몰 리뷰 제목처럼 작성해주세요.
+이모티콘 사용하지 말고, 15-25자 분량으로."""
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "당신은 20-30대 일반 소비자입니다. 쇼핑몰 리뷰 제목을 자연스럽고 캐주얼하게 작성합니다."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=1.0,
+            max_tokens=100
+        )
+        
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"OpenAI API 오류: {e}")
+        # 오류 시 간단한 제목 생성
+        return f"만족스러운 {category} 제품"
+
 def generate_kukdae_reviews(products, count):
-    """국대쥬스 전용 리뷰 생성 (onreple 양식)"""
+    """국대쥬스 전용 리뷰 생성 (onreple 양식) - OpenAI API 사용 (제목 없음)"""
     reviews = []
     now = datetime.now()
     
     for i in range(count):
         product = random.choice(products)
         category = detect_category(product['product_name'])
-        flavor = extract_flavor(product['product_name'])
         
-        # 템플릿 선택 및 치환
-        template = random.choice(REVIEW_TEMPLATES[category])
-        review_text = template.format(flavor=flavor)
+        # OpenAI API로 리뷰 내용만 생성 (제목 없음)
+        review_text = generate_ai_review_content(product['product_name'], category)
         
         # 날짜: 어제~3일 전 (ISO 8601 형식)
         days_ago = random.randint(1, 3)
@@ -461,21 +545,17 @@ def generate_reviews():
     if channel == 'kukdae':
         return generate_kukdae_reviews(products, count)
     
-    # 베이핑존, 쥬스온 기본 양식
+    # 베이핑존, 쥬스온 기본 양식 - OpenAI API 사용 (제목과 내용 각각 생성)
     reviews = []
     now = datetime.now()
     
     for i in range(count):
         product = random.choice(products)
         category = detect_category(product['product_name'])
-        flavor = extract_flavor(product['product_name'])
         
-        # 템플릿 선택 및 치환
-        template = random.choice(REVIEW_TEMPLATES[category])
-        review_text = template.format(flavor=flavor)
-        
-        # 제목은 리뷰 내용 30자 요약
-        title = review_text[:30] + ('...' if len(review_text) > 30 else '')
+        # OpenAI API로 제목과 내용을 각각 별도로 생성
+        review_title = generate_ai_review_title(product['product_name'], category)
+        review_content = generate_ai_review_content(product['product_name'], category)
         
         # 날짜: 어제~3일 전
         days_ago = random.randint(1, 3)
@@ -483,8 +563,8 @@ def generate_reviews():
         
         reviews.append({
             '작성자': generate_korean_name(),
-            '제목': title,
-            '내용': review_text,
+            '제목': review_title,
+            '내용': review_content,
             '평점': random.choice([4, 5]),
             '작성일': review_date.strftime('%Y-%m-%d %H:%M:%S'),
             '상품번호': product['product_no'],

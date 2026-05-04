@@ -5,4 +5,3 @@
  * Running on http://127.0.0.1:10000
  * Running on http://169.254.0.21:10000
 [33mPress CTRL+C to quit[0m
-127.0.0.1 - - [04/May/2026 10:27:41] "GET /health HTTP/1.1" 200 -
