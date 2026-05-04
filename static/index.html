@@ -93,11 +93,6 @@
             color: #721c24;
         }
         
-        .api-status.checking {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-        
         .tabs {
             display: flex;
             gap: 10px;
@@ -146,6 +141,27 @@
             flex-wrap: wrap;
         }
         
+        .input-group {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+        
         .btn {
             padding: 12px 30px;
             border: none;
@@ -162,8 +178,23 @@
             box-shadow: 0 6px 15px rgba(0,0,0,0.15);
         }
         
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
         .btn-success {
             background: #28a745;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
             color: white;
         }
         
@@ -191,18 +222,6 @@
             border-radius: 10px;
             text-align: center;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        
-        .stat-card.category-basic {
-            background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
-        }
-        
-        .stat-card.category-disposable {
-            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-        }
-        
-        .stat-card.category-liquid {
-            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
         }
         
         .stat-card h3 {
@@ -249,32 +268,12 @@
             background: #f8f9fa;
         }
         
-        .products-table th {
-            font-weight: bold;
-            font-size: 1.1em;
-        }
-        
         .category-badge {
             display: inline-block;
             padding: 4px 12px;
             border-radius: 15px;
             font-size: 0.85em;
             font-weight: bold;
-        }
-        
-        .category-기타 {
-            background: #e3f2fd;
-            color: #1976d2;
-        }
-        
-        .category-일회용 {
-            background: #fff3e0;
-            color: #f57c00;
-        }
-        
-        .category-액상 {
-            background: #e8f5e9;
-            color: #388e3c;
         }
         
         .alert {
@@ -352,34 +351,124 @@
             color: #1976d2;
             font-size: 1.1em;
         }
-
-        .file-upload {
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border: 2px dashed #667eea;
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
         }
-
-        .file-upload input[type="file"] {
-            margin-right: 10px;
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .category-manager {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .category-manager h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .category-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .category-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+        
+        .category-item input {
+            border: none;
+            outline: none;
+            font-size: 1em;
+            width: 100px;
+        }
+        
+        .category-item .delete-cat {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+        
+        .add-category-form {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .add-category-form input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🛍️ 베이핑존 상품 관리 시스템 v3.1</h1>
-            <p>엑셀 파일에서 직접 상품 목록을 불러와 리뷰를 생성하세요</p>
+            <h1>🛍️ 베이핑존 상품 관리 시스템 v5.0</h1>
+            <p>GitHub에서 엑셀 자동 로드 + 카테고리 관리 기능 추가</p>
             
             <div class="api-config">
                 <h3>🔑 API 키 설정 (리뷰 생성용)</h3>
                 <div class="api-input-group">
-                    <input type="password" id="api-key-input" placeholder="API 키를 입력하세요 (예: vaping-zone-2024-secret-key)" value="">
+                    <input type="password" id="api-key-input" placeholder="API 키 입력 (예: vaping-zone-2024-secret-key)" value="">
                     <button class="btn btn-info" onclick="saveAPIKey()">💾 저장</button>
                     <span class="api-status disconnected" id="api-status">⚠️ 미설정</span>
                 </div>
-                <small style="color: #666;">💡 API 키는 리뷰 생성 시에만 필요합니다</small>
             </div>
         </div>
         
@@ -387,40 +476,53 @@
             <button class="tab-btn active" onclick="switchTab('vapingzone')">베이핑존</button>
             <button class="tab-btn" onclick="switchTab('juiceon')">쥬스온</button>
             <button class="tab-btn" onclick="switchTab('kukdae')">국대쥬스</button>
+            <button class="tab-btn" onclick="switchTab('settings')">⚙️ 설정</button>
         </div>
         
         <div id="alert-container"></div>
         
+        <!-- 설정 탭 -->
+        <div id="settings" class="tab-content">
+            <h2>⚙️ 카테고리 관리</h2>
+            <div class="category-manager">
+                <h4>📋 현재 카테고리 목록</h4>
+                <div class="category-list" id="category-list"></div>
+                <div class="add-category-form">
+                    <input type="text" id="new-category-input" placeholder="새 카테고리 이름 (예: 케이스)">
+                    <button class="btn btn-primary" onclick="addCategory()">➕ 추가</button>
+                </div>
+            </div>
+            <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
+                <strong>⚠️ 주의사항:</strong>
+                <ul style="margin-top: 10px; padding-left: 20px;">
+                    <li>카테고리를 삭제하면 해당 카테고리를 사용하는 상품은 '기타'로 변경됩니다.</li>
+                    <li>카테고리 변경사항은 브라우저에만 저장되며, GitHub 엑셀 파일은 수동으로 업데이트해야 합니다.</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- 베이핑존 탭 -->
         <div id="vapingzone" class="tab-content active">
             <h2>베이핑존 상품 관리</h2>
             
-            <div class="file-upload">
-                <label>📁 엑셀 파일 업로드: </label>
-                <input type="file" id="vapingzone-file" accept=".xlsx,.xls" onchange="loadExcelFile('vapingzone')">
-                <button class="btn btn-info" onclick="downloadExcelTemplate('vapingzone')">📥 엑셀 양식 다운로드</button>
-            </div>
-
-            <div class="stats">
-                <div class="stat-card">
-                    <h3 id="vapingzone-count">0</h3>
-                    <p>전체 상품</p>
-                </div>
-                <div class="stat-card category-basic">
-                    <h3 id="vapingzone-count-기타">0</h3>
-                    <p>기타</p>
-                </div>
-                <div class="stat-card category-disposable">
-                    <h3 id="vapingzone-count-일회용">0</h3>
-                    <p>일회용</p>
-                </div>
-                <div class="stat-card category-liquid">
-                    <h3 id="vapingzone-count-액상">0</h3>
-                    <p>액상</p>
-                </div>
-            </div>
+            <div class="stats" id="vapingzone-stats"></div>
             
             <div class="controls">
+                <div class="input-group">
+                    <label>상품번호</label>
+                    <input type="text" id="vapingzone-product-no" placeholder="예: 297">
+                </div>
+                <div class="input-group">
+                    <label>상품명</label>
+                    <input type="text" id="vapingzone-product-name" placeholder="예: 칠렉스 비타 일회용">
+                </div>
+                <div class="input-group">
+                    <label>카테고리</label>
+                    <select id="vapingzone-category"></select>
+                </div>
+                <button class="btn btn-primary" onclick="addProduct('vapingzone')">➕ 상품 추가</button>
                 <button class="btn btn-success" onclick="generateReviews('vapingzone')">📝 리뷰 생성</button>
+                <button class="btn btn-info" onclick="downloadExcel('vapingzone')">📥 엑셀 다운로드</button>
             </div>
             
             <div class="selection-info" id="vapingzone-selection-info" style="display:none;">
@@ -432,9 +534,9 @@
                 <input type="text" id="vapingzone-search" placeholder="🔍 상품 검색..." onkeyup="searchProducts('vapingzone')">
             </div>
             
-            <div class="loading" id="vapingzone-loading">⏳ 로딩 중...</div>
+            <div class="loading" id="vapingzone-loading">⏳ GitHub에서 로딩 중...</div>
             
-            <table class="products-table" id="vapingzone-table">
+            <table class="products-table">
                 <thead>
                     <tr>
                         <th width="50">
@@ -443,42 +545,35 @@
                         <th width="80">상품번호</th>
                         <th>상품명</th>
                         <th width="100">카테고리</th>
+                        <th width="160">작업</th>
                     </tr>
                 </thead>
                 <tbody id="vapingzone-tbody"></tbody>
             </table>
         </div>
         
+        <!-- 쥬스온 탭 -->
         <div id="juiceon" class="tab-content">
             <h2>쥬스온 상품 관리</h2>
             
-            <div class="file-upload">
-                <label>📁 엑셀 파일 업로드: </label>
-                <input type="file" id="juiceon-file" accept=".xlsx,.xls" onchange="loadExcelFile('juiceon')">
-                <button class="btn btn-info" onclick="downloadExcelTemplate('juiceon')">📥 엑셀 양식 다운로드</button>
-            </div>
-
-            <div class="stats">
-                <div class="stat-card">
-                    <h3 id="juiceon-count">0</h3>
-                    <p>전체 상품</p>
-                </div>
-                <div class="stat-card category-basic">
-                    <h3 id="juiceon-count-기타">0</h3>
-                    <p>기타</p>
-                </div>
-                <div class="stat-card category-disposable">
-                    <h3 id="juiceon-count-일회용">0</h3>
-                    <p>일회용</p>
-                </div>
-                <div class="stat-card category-liquid">
-                    <h3 id="juiceon-count-액상">0</h3>
-                    <p>액상</p>
-                </div>
-            </div>
+            <div class="stats" id="juiceon-stats"></div>
             
             <div class="controls">
+                <div class="input-group">
+                    <label>상품번호</label>
+                    <input type="text" id="juiceon-product-no" placeholder="예: 451">
+                </div>
+                <div class="input-group">
+                    <label>상품명</label>
+                    <input type="text" id="juiceon-product-name" placeholder="예: 디오 2X 악마">
+                </div>
+                <div class="input-group">
+                    <label>카테고리</label>
+                    <select id="juiceon-category"></select>
+                </div>
+                <button class="btn btn-primary" onclick="addProduct('juiceon')">➕ 상품 추가</button>
                 <button class="btn btn-success" onclick="generateReviews('juiceon')">📝 리뷰 생성</button>
+                <button class="btn btn-info" onclick="downloadExcel('juiceon')">📥 엑셀 다운로드</button>
             </div>
             
             <div class="selection-info" id="juiceon-selection-info" style="display:none;">
@@ -490,9 +585,9 @@
                 <input type="text" id="juiceon-search" placeholder="🔍 상품 검색..." onkeyup="searchProducts('juiceon')">
             </div>
             
-            <div class="loading" id="juiceon-loading">⏳ 로딩 중...</div>
+            <div class="loading" id="juiceon-loading">⏳ GitHub에서 로딩 중...</div>
             
-            <table class="products-table" id="juiceon-table">
+            <table class="products-table">
                 <thead>
                     <tr>
                         <th width="50">
@@ -501,42 +596,35 @@
                         <th width="80">상품번호</th>
                         <th>상품명</th>
                         <th width="100">카테고리</th>
+                        <th width="160">작업</th>
                     </tr>
                 </thead>
                 <tbody id="juiceon-tbody"></tbody>
             </table>
         </div>
         
+        <!-- 국대쥬스 탭 -->
         <div id="kukdae" class="tab-content">
             <h2>국대쥬스 상품 관리</h2>
             
-            <div class="file-upload">
-                <label>📁 엑셀 파일 업로드: </label>
-                <input type="file" id="kukdae-file" accept=".xlsx,.xls" onchange="loadExcelFile('kukdae')">
-                <button class="btn btn-info" onclick="downloadExcelTemplate('kukdae')">📥 엑셀 양식 다운로드</button>
-            </div>
-
-            <div class="stats">
-                <div class="stat-card">
-                    <h3 id="kukdae-count">0</h3>
-                    <p>전체 상품</p>
-                </div>
-                <div class="stat-card category-basic">
-                    <h3 id="kukdae-count-기타">0</h3>
-                    <p>기타</p>
-                </div>
-                <div class="stat-card category-disposable">
-                    <h3 id="kukdae-count-일회용">0</h3>
-                    <p>일회용</p>
-                </div>
-                <div class="stat-card category-liquid">
-                    <h3 id="kukdae-count-액상">0</h3>
-                    <p>액상</p>
-                </div>
-            </div>
+            <div class="stats" id="kukdae-stats"></div>
             
             <div class="controls">
+                <div class="input-group">
+                    <label>상품번호</label>
+                    <input type="text" id="kukdae-product-no" placeholder="예: 452">
+                </div>
+                <div class="input-group">
+                    <label>상품명</label>
+                    <input type="text" id="kukdae-product-name" placeholder="예: 젤루좋아 입문 세트">
+                </div>
+                <div class="input-group">
+                    <label>카테고리</label>
+                    <select id="kukdae-category"></select>
+                </div>
+                <button class="btn btn-primary" onclick="addProduct('kukdae')">➕ 상품 추가</button>
                 <button class="btn btn-success" onclick="generateReviews('kukdae')">📝 리뷰 생성</button>
+                <button class="btn btn-info" onclick="downloadExcel('kukdae')">📥 엑셀 다운로드</button>
             </div>
             
             <div class="selection-info" id="kukdae-selection-info" style="display:none;">
@@ -548,9 +636,9 @@
                 <input type="text" id="kukdae-search" placeholder="🔍 상품 검색..." onkeyup="searchProducts('kukdae')">
             </div>
             
-            <div class="loading" id="kukdae-loading">⏳ 로딩 중...</div>
+            <div class="loading" id="kukdae-loading">⏳ GitHub에서 로딩 중...</div>
             
-            <table class="products-table" id="kukdae-table">
+            <table class="products-table">
                 <thead>
                     <tr>
                         <th width="50">
@@ -559,6 +647,7 @@
                         <th width="80">상품번호</th>
                         <th>상품명</th>
                         <th width="100">카테고리</th>
+                        <th width="160">작업</th>
                     </tr>
                 </thead>
                 <tbody id="kukdae-tbody"></tbody>
@@ -566,8 +655,37 @@
         </div>
     </div>
     
+    <!-- 수정 모달 -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✏️ 상품 수정</h2>
+            </div>
+            <div class="modal-body">
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label>상품번호</label>
+                    <input type="text" id="edit-product-no">
+                </div>
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label>상품명</label>
+                    <input type="text" id="edit-product-name">
+                </div>
+                <div class="input-group">
+                    <label>카테고리</label>
+                    <select id="edit-category"></select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditModal()">취소</button>
+                <button class="btn btn-primary" onclick="saveEdit()">💾 저장</button>
+            </div>
+        </div>
+    </div>
+    
     <script>
         const API_URL = window.location.origin;
+        const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/futurelinklee/vaping-zone-backend/main/data';
+        
         let API_KEY = '';
         let currentChannel = 'vapingzone';
         let allProducts = {
@@ -580,6 +698,157 @@
             juiceon: new Set(),
             kukdae: new Set()
         };
+        let editingProduct = null;
+        
+        // 기본 카테고리
+        let categories = ['기타', '일회용', '액상', '기기'];
+        
+        const EXCEL_FILES = {
+            vapingzone: '베이핑존.xlsx',
+            juiceon: '쥬스온.xlsx',
+            kukdae: '국대쥬스.xlsx'
+        };
+        
+        // 카테고리 색상 생성
+        const categoryColors = [
+            'linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)',
+            'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+            'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)',
+            'linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)',
+            'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+            'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+            'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+            'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)'
+        ];
+        
+        function getCategoryColor(index) {
+            return categoryColors[index % categoryColors.length];
+        }
+        
+        function getCategoryBadgeColor(category) {
+            const colors = {
+                '기타': { bg: '#e3f2fd', color: '#1976d2' },
+                '일회용': { bg: '#fff3e0', color: '#f57c00' },
+                '액상': { bg: '#e8f5e9', color: '#388e3c' },
+                '기기': { bg: '#f3e5f5', color: '#7b1fa2' }
+            };
+            return colors[category] || { bg: '#f5f5f5', color: '#666' };
+        }
+        
+        // 카테고리 로드 및 저장
+        function loadCategories() {
+            const saved = localStorage.getItem('vaping_categories');
+            if (saved) {
+                categories = JSON.parse(saved);
+            }
+            updateCategoryList();
+            updateAllCategorySelects();
+        }
+        
+        function saveCategories() {
+            localStorage.setItem('vaping_categories', JSON.stringify(categories));
+        }
+        
+        function addCategory() {
+            const input = document.getElementById('new-category-input');
+            const newCat = input.value.trim();
+            
+            if (!newCat) {
+                showAlert('카테고리 이름을 입력하세요', 'error');
+                return;
+            }
+            
+            if (categories.includes(newCat)) {
+                showAlert('이미 존재하는 카테고리입니다', 'error');
+                return;
+            }
+            
+            categories.push(newCat);
+            saveCategories();
+            updateCategoryList();
+            updateAllCategorySelects();
+            input.value = '';
+            showAlert(`✅ 카테고리 '${newCat}' 추가됨`, 'success');
+        }
+        
+        function deleteCategory(category) {
+            if (categories.length <= 1) {
+                showAlert('최소 1개의 카테고리는 유지해야 합니다', 'error');
+                return;
+            }
+            
+            if (!confirm(`카테고리 '${category}'를 삭제하시겠습니까?\n해당 카테고리의 모든 상품은 '기타'로 변경됩니다.`)) {
+                return;
+            }
+            
+            categories = categories.filter(c => c !== category);
+            saveCategories();
+            
+            // 모든 채널의 상품에서 해당 카테고리를 '기타'로 변경
+            ['vapingzone', 'juiceon', 'kukdae'].forEach(channel => {
+                allProducts[channel].forEach(p => {
+                    if (p.category === category) {
+                        p.category = categories[0] || '기타';
+                    }
+                });
+                displayProducts(channel, allProducts[channel]);
+                updateStats(channel, allProducts[channel]);
+            });
+            
+            updateCategoryList();
+            updateAllCategorySelects();
+            showAlert(`✅ 카테고리 '${category}' 삭제됨`, 'success');
+        }
+        
+        function updateCategoryList() {
+            const container = document.getElementById('category-list');
+            container.innerHTML = categories.map(cat => `
+                <div class="category-item">
+                    <span>${cat}</span>
+                    ${categories.length > 1 ? `<button class="delete-cat" onclick="deleteCategory('${cat}')">❌</button>` : ''}
+                </div>
+            `).join('');
+        }
+        
+        function updateAllCategorySelects() {
+            const selects = ['vapingzone-category', 'juiceon-category', 'kukdae-category', 'edit-category'];
+            selects.forEach(id => {
+                const select = document.getElementById(id);
+                if (select) {
+                    const currentValue = select.value;
+                    select.innerHTML = categories.map(cat => 
+                        `<option value="${cat}">${cat}</option>`
+                    ).join('');
+                    if (categories.includes(currentValue)) {
+                        select.value = currentValue;
+                    }
+                }
+            });
+            
+            // 통계 카드 업데이트
+            ['vapingzone', 'juiceon', 'kukdae'].forEach(channel => {
+                updateStatsCards(channel);
+                if (allProducts[channel].length > 0) {
+                    updateStats(channel, allProducts[channel]);
+                }
+            });
+        }
+        
+        function updateStatsCards(channel) {
+            const container = document.getElementById(`${channel}-stats`);
+            container.innerHTML = `
+                <div class="stat-card">
+                    <h3 id="${channel}-count">0</h3>
+                    <p>전체 상품</p>
+                </div>
+                ${categories.map((cat, idx) => `
+                    <div class="stat-card" style="background: ${getCategoryColor(idx)}">
+                        <h3 id="${channel}-count-${cat}">0</h3>
+                        <p>${cat}</p>
+                    </div>
+                `).join('')}
+            `;
+        }
         
         function switchTab(channel) {
             currentChannel = channel;
@@ -589,6 +858,10 @@
             
             event.target.classList.add('active');
             document.getElementById(channel).classList.add('active');
+            
+            if (channel !== 'settings' && allProducts[channel].length === 0) {
+                loadProductsFromGitHub(channel);
+            }
         }
         
         function showAlert(message, type = 'success') {
@@ -601,56 +874,54 @@
             setTimeout(() => alert.remove(), 5000);
         }
         
-        function loadExcelFile(channel) {
-            const fileInput = document.getElementById(`${channel}-file`);
-            const file = fileInput.files[0];
-            
-            if (!file) {
-                showAlert('파일을 선택하세요', 'error');
-                return;
-            }
-            
+        async function loadProductsFromGitHub(channel) {
             const loading = document.getElementById(`${channel}-loading`);
             loading.classList.add('active');
             
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, {type: 'array'});
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-                    
-                    const products = jsonData.map(row => ({
-                        product_no: String(row['상품번호'] || row['product_no'] || ''),
-                        product_name: String(row['상품명'] || row['product_name'] || ''),
-                        category: String(row['카테고리'] || row['category'] || '기타')
-                    })).filter(p => p.product_no && p.product_name);
-                    
-                    allProducts[channel] = products;
-                    displayProducts(channel, products);
-                    updateStats(channel, products);
-                    
-                    showAlert(`✅ ${products.length}개 상품 로드 완료!`, 'success');
-                } catch (error) {
-                    showAlert('엑셀 파일 읽기 실패: ' + error.message, 'error');
-                } finally {
-                    loading.classList.remove('active');
+            try {
+                const url = `${GITHUB_RAW_BASE}/${EXCEL_FILES[channel]}`;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-            };
-            
-            reader.readAsArrayBuffer(file);
+                
+                const arrayBuffer = await response.arrayBuffer();
+                const data = new Uint8Array(arrayBuffer);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                
+                const products = jsonData.map(row => ({
+                    product_no: String(row['상품번호'] || row['product_no'] || ''),
+                    product_name: String(row['상품명'] || row['product_name'] || ''),
+                    category: String(row['카테고리'] || row['category'] || categories[0] || '기타')
+                })).filter(p => p.product_no && p.product_name);
+                
+                allProducts[channel] = products;
+                displayProducts(channel, products);
+                updateStats(channel, products);
+                
+                showAlert(`✅ ${products.length}개 상품 GitHub에서 로드 완료!`, 'success');
+            } catch (error) {
+                showAlert('❌ GitHub 엑셀 파일 로드 실패: ' + error.message, 'error');
+                console.error(error);
+            } finally {
+                loading.classList.remove('active');
+            }
         }
         
         function displayProducts(channel, products) {
             const tbody = document.getElementById(`${channel}-tbody`);
             
             if (products.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="empty-state">엑셀 파일을 업로드하세요</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="empty-state">상품이 없습니다</td></tr>';
                 return;
             }
             
-            tbody.innerHTML = products.map(p => `
+            tbody.innerHTML = products.map(p => {
+                const badgeColor = getCategoryBadgeColor(p.category);
+                return `
                 <tr>
                     <td>
                         <input type="checkbox" class="product-checkbox" 
@@ -660,9 +931,16 @@
                     </td>
                     <td>${p.product_no}</td>
                     <td>${p.product_name}</td>
-                    <td><span class="category-badge category-${p.category || '기타'}">${p.category || '기타'}</span></td>
+                    <td><span class="category-badge" style="background: ${badgeColor.bg}; color: ${badgeColor.color}">${p.category}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-warning" onclick='openEditModal("${channel}", "${p.product_no}", \`${p.product_name.replace(/`/g, '\\`')}\`, "${p.category}")'>✏️</button>
+                            <button class="btn btn-danger" onclick="deleteProduct('${channel}', '${p.product_no}')">🗑️</button>
+                        </div>
+                    </td>
                 </tr>
-            `).join('');
+                `;
+            }).join('');
         }
         
         function toggleProductSelection(channel, productNo, checked) {
@@ -708,29 +986,125 @@
             document.querySelectorAll(`#${channel}-tbody .product-checkbox`).forEach(cb => {
                 cb.checked = false;
             });
-            document.querySelector(`#${channel}-table thead .product-checkbox`).checked = false;
             updateSelectionInfo(channel);
         }
         
         function updateStats(channel, products) {
             document.getElementById(`${channel}-count`).textContent = products.length;
             
-            const categoryCounts = {
-                '기타': 0,
-                '일회용': 0,
-                '액상': 0
-            };
+            const categoryCounts = {};
+            categories.forEach(cat => {
+                categoryCounts[cat] = 0;
+            });
             
             products.forEach(p => {
-                const cat = p.category || '기타';
+                const cat = p.category || categories[0] || '기타';
                 if (categoryCounts[cat] !== undefined) {
                     categoryCounts[cat]++;
+                } else {
+                    categoryCounts[categories[0] || '기타']++;
                 }
             });
             
-            Object.keys(categoryCounts).forEach(cat => {
-                document.getElementById(`${channel}-count-${cat}`).textContent = categoryCounts[cat];
+            categories.forEach(cat => {
+                const el = document.getElementById(`${channel}-count-${cat}`);
+                if (el) {
+                    el.textContent = categoryCounts[cat] || 0;
+                }
             });
+        }
+        
+        function addProduct(channel) {
+            const productNo = document.getElementById(`${channel}-product-no`).value.trim();
+            const productName = document.getElementById(`${channel}-product-name`).value.trim();
+            const category = document.getElementById(`${channel}-category`).value;
+            
+            if (!productNo || !productName) {
+                showAlert('상품번호와 상품명을 모두 입력하세요', 'error');
+                return;
+            }
+            
+            if (allProducts[channel].some(p => p.product_no === productNo)) {
+                showAlert(`상품번호 ${productNo}는 이미 존재합니다`, 'error');
+                return;
+            }
+            
+            const newProduct = { product_no: productNo, product_name: productName, category: category };
+            allProducts[channel].push(newProduct);
+            
+            displayProducts(channel, allProducts[channel]);
+            updateStats(channel, allProducts[channel]);
+            
+            document.getElementById(`${channel}-product-no`).value = '';
+            document.getElementById(`${channel}-product-name`).value = '';
+            document.getElementById(`${channel}-category`).value = categories[0] || '기타';
+            
+            showAlert('✅ 상품이 추가되었습니다', 'success');
+        }
+        
+        function openEditModal(channel, productNo, productName, category) {
+            editingProduct = { channel, oldProductNo: productNo };
+            document.getElementById('edit-product-no').value = productNo;
+            document.getElementById('edit-product-name').value = productName;
+            document.getElementById('edit-category').value = category;
+            document.getElementById('edit-modal').classList.add('active');
+        }
+        
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.remove('active');
+            editingProduct = null;
+        }
+        
+        function saveEdit() {
+            if (!editingProduct) return;
+            
+            const newProductNo = document.getElementById('edit-product-no').value.trim();
+            const newProductName = document.getElementById('edit-product-name').value.trim();
+            const newCategory = document.getElementById('edit-category').value;
+            
+            if (!newProductNo || !newProductName) {
+                showAlert('상품번호와 상품명을 모두 입력하세요', 'error');
+                return;
+            }
+            
+            const channel = editingProduct.channel;
+            const index = allProducts[channel].findIndex(p => p.product_no === editingProduct.oldProductNo);
+            
+            if (index === -1) {
+                showAlert('상품을 찾을 수 없습니다', 'error');
+                return;
+            }
+            
+            if (newProductNo !== editingProduct.oldProductNo) {
+                if (allProducts[channel].some(p => p.product_no === newProductNo)) {
+                    showAlert(`상품번호 ${newProductNo}는 이미 존재합니다`, 'error');
+                    return;
+                }
+            }
+            
+            allProducts[channel][index] = {
+                product_no: newProductNo,
+                product_name: newProductName,
+                category: newCategory
+            };
+            
+            displayProducts(channel, allProducts[channel]);
+            updateStats(channel, allProducts[channel]);
+            closeEditModal();
+            
+            showAlert('✅ 상품이 수정되었습니다', 'success');
+        }
+        
+        function deleteProduct(channel, productNo) {
+            if (!confirm(`상품번호 ${productNo}를 삭제하시겠습니까?`)) return;
+            
+            allProducts[channel] = allProducts[channel].filter(p => p.product_no !== productNo);
+            selectedProducts[channel].delete(productNo);
+            
+            displayProducts(channel, allProducts[channel]);
+            updateStats(channel, allProducts[channel]);
+            
+            showAlert('✅ 상품이 삭제되었습니다', 'success');
         }
         
         function searchProducts(channel) {
@@ -738,7 +1112,7 @@
             const filtered = allProducts[channel].filter(p => 
                 p.product_no.toLowerCase().includes(searchTerm) ||
                 p.product_name.toLowerCase().includes(searchTerm) ||
-                (p.category || '기타').toLowerCase().includes(searchTerm)
+                p.category.toLowerCase().includes(searchTerm)
             );
             displayProducts(channel, filtered);
         }
@@ -782,7 +1156,7 @@
                     a.href = url;
                     a.download = `리뷰_${channel}_${Date.now()}.xlsx`;
                     a.click();
-                    showAlert(`✅ 선택한 ${selected.length}개 상품에 대해 ${count}개의 리뷰가 생성되었습니다`, 'success');
+                    showAlert(`✅ ${selected.length}개 상품에 대해 ${count}개의 리뷰가 생성되었습니다`, 'success');
                 } else {
                     const error = await response.json();
                     showAlert('❌ ' + error.error, 'error');
@@ -792,14 +1166,15 @@
             }
         }
         
-        function downloadExcelTemplate(channel) {
+        function downloadExcel(channel) {
             const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.aoa_to_sheet([
-                ['상품번호', '상품명', '카테고리'],
-                ['297', '칠렉스 비타 일회용 10000 PUFF', '액상'],
-                ['296', '칠렉스 비타 일회용 체리콜라', '액상']
-            ]);
+            const ws_data = [['상품번호', '상품명', '카테고리']];
             
+            allProducts[channel].forEach(p => {
+                ws_data.push([p.product_no, p.product_name, p.category]);
+            });
+            
+            const ws = XLSX.utils.aoa_to_sheet(ws_data);
             XLSX.utils.book_append_sheet(wb, ws, '상품목록');
             
             const channelNames = {
@@ -808,8 +1183,8 @@
                 'kukdae': '국대쥬스'
             };
             
-            XLSX.writeFile(wb, `${channelNames[channel]}_상품목록_양식.xlsx`);
-            showAlert('✅ 엑셀 양식 다운로드 완료!', 'success');
+            XLSX.writeFile(wb, `${channelNames[channel]}_${new Date().toISOString().slice(0,10)}.xlsx`);
+            showAlert('✅ 엑셀 다운로드 완료!', 'success');
         }
         
         function saveAPIKey() {
@@ -842,8 +1217,17 @@
             }
         }
         
+        window.onclick = function(event) {
+            const modal = document.getElementById('edit-modal');
+            if (event.target === modal) {
+                closeEditModal();
+            }
+        }
+        
         window.onload = () => {
+            loadCategories();
             loadSavedAPIKey();
+            loadProductsFromGitHub('vapingzone');
         };
     </script>
 </body>
