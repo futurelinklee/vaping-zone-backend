@@ -1187,7 +1187,7 @@
             showAlert('✅ 엑셀 다운로드 완료!', 'success');
         }
         
-        function saveAPIKey() {
+        async function saveAPIKey() {
             const input = document.getElementById('api-key-input');
             const statusEl = document.getElementById('api-status');
             const apiKey = input.value.trim();
@@ -1197,12 +1197,35 @@
                 return;
             }
             
-            API_KEY = apiKey;
-            localStorage.setItem('vaping_api_key', apiKey);
+            // API 키 검증
+            statusEl.className = 'api-status disconnected';
+            statusEl.innerHTML = '⏳ 검증 중...';
             
-            statusEl.className = 'api-status connected';
-            statusEl.innerHTML = '✅ 저장됨';
-            showAlert('✅ API 키가 저장되었습니다', 'success');
+            try {
+                const response = await fetch(`${API_URL}/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`
+                    }
+                });
+                
+                if (response.ok) {
+                    API_KEY = apiKey;
+                    localStorage.setItem('vaping_api_key', apiKey);
+                    
+                    statusEl.className = 'api-status connected';
+                    statusEl.innerHTML = '✅ 인증됨';
+                    showAlert('✅ API 키가 검증되고 저장되었습니다', 'success');
+                } else {
+                    statusEl.className = 'api-status disconnected';
+                    statusEl.innerHTML = '❌ 인증 실패';
+                    showAlert('❌ API 키가 올바르지 않습니다', 'error');
+                }
+            } catch (error) {
+                statusEl.className = 'api-status disconnected';
+                statusEl.innerHTML = '❌ 연결 실패';
+                showAlert('❌ 서버 연결 실패: ' + error.message, 'error');
+            }
         }
         
         function loadSavedAPIKey() {
