@@ -26,7 +26,7 @@ KOREAN_NAMES = ['민준', '서준', '예준', '도윤', '시우', '주원', '하
                 '현우', '민재', '시현', '태양', '승우', '유진', '은서', '채원', '다은', '수빈']
 
 def generate_korean_name():
-    """3글자 한글 이름 생성"""
+    """3글자 한글 이름 생성"""  # ← 이 줄 확인
     surname = random.choice(KOREAN_SURNAMES)
     name = random.choice(KOREAN_NAMES)
     return f"{surname}{name}"
